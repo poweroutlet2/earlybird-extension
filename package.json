@@ -1,0 +1,70 @@
+{
+  "name": "early-bird",
+  "displayName": "EarlyBird Jobs - Find and apply to newly posted LinkedIn jobs",
+  "version": "0.7",
+  "description": "Sort LinkedIn job postings by posting date and applicant count.",
+  "author": "HP",
+  "scripts": {
+    "dev": "plasmo dev",
+    "build": "plasmo build",
+    "package": "plasmo package"
+  },
+  "dependencies": {
+    "@plasmohq/storage": "^1.12.0",
+    "@radix-ui/react-checkbox": "^1.1.1",
+    "@radix-ui/react-dialog": "^1.1.1",
+    "@radix-ui/react-label": "^2.1.0",
+    "@radix-ui/react-popover": "^1.1.2",
+    "@radix-ui/react-radio-group": "^1.2.0",
+    "@radix-ui/react-scroll-area": "^1.2.0",
+    "@radix-ui/react-select": "^2.1.1",
+    "@radix-ui/react-separator": "^1.1.0",
+    "@radix-ui/react-slot": "^1.1.0",
+    "@radix-ui/react-switch": "^1.1.1",
+    "@radix-ui/react-tooltip": "^1.1.3",
+    "@trpc/client": "^10.45.2",
+    "@trpc/server": "^10.45.2",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.1",
+    "dexie": "^4.0.8",
+    "dexie-react-hooks": "^1.1.7",
+    "lucide-react": "^0.438.0",
+    "p-limit": "^6.1.0",
+    "plasmo": "0.89.1",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "react-virtualized-auto-sizer": "^1.0.24",
+    "react-window": "^1.8.10",
+    "tailwind-merge": "^2.5.2",
+    "tailwindcss": "3.4.1",
+    "tailwindcss-animate": "^1.0.7",
+    "trpc-chrome": "^1.0.0",
+    "vaul": "^1.0.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@ianvs/prettier-plugin-sort-imports": "4.1.1",
+    "@types/chrome": "0.0.258",
+    "@types/node": "20.11.5",
+    "@types/react": "18.2.48",
+    "@types/react-dom": "18.2.18",
+    "postcss": "8.4.33",
+    "prettier": "3.2.4",
+    "typescript": "5.3.3"
+  },
+  "manifest": {
+    "browser_specific_settings": {
+      "gecko": {
+        "id": "harshp2015m@gmail.com"
+      }
+    },
+    "host_permissions": [
+      "https://*.linkedin.com/*",
+      "https://*.earlybirdjobs.io/*",
+      "<all_urls>"
+    ],
+    "permissions": [
+      "webRequest"
+    ]
+  }
+}

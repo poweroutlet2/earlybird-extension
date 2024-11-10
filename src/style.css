@@ -1,0 +1,33 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+    --sb-track-color: #ffffff;
+    --sb-thumb-color: #000000;
+}
+
+.earlybird-job-finder {
+    --sb-track-color: #ffffff;
+    --sb-thumb-color: #000000;
+}
+
+.earlybird-job-finder::-webkit-scrollbar {
+    width: 16px;
+}
+
+.earlybird-job-finder::-webkit-scrollbar-track {
+    background: var(--sb-track-color);
+}
+
+.earlybird-job-finder::-webkit-scrollbar-thumb {
+    background: var(--sb-thumb-color);
+}
+
+@supports not selector(::-webkit-scrollbar) {
+    .earlybird-job-finder {
+        scrollbar-color: var(--sb-thumb-color) var(--sb-track-color);
+    }
+}
