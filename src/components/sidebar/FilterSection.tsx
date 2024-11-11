@@ -201,10 +201,10 @@ export const FilterSection: React.FC<FilterSectionProps> = ({
         <div className="flex space-x-2">
           <Input
             id="include-keywords"
-            placeholder="Enter keyword to include in job title, company name, or description"
+            placeholder="Enter keyword to include in job title or company name"
             value={includeKeyword}
             onChange={(e) => setIncludeKeyword(e.target.value)}
-            onKeyPress={handleIncludeKeyPress}
+            onKeyDown={handleIncludeKeyPress}
           />
           <Button 
             onClick={addIncludeKeyword}
@@ -234,7 +234,7 @@ export const FilterSection: React.FC<FilterSectionProps> = ({
             placeholder="Enter keyword to exclude from job title or company name"
             value={excludeKeyword}
             onChange={(e) => setExcludeKeyword(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyPress}
           />
           <Button 
             onClick={addExcludeKeyword}
