@@ -252,76 +252,102 @@ function getJobId(urn: string) {
 
 async function getJobsFromCollection(jobCollectionSlug?: string, runId?: number) {
     let rawData: any = []
-    try {
-        rawData = await fetchLinkedInJobsList({ jobCollectionSlug });
-        if (jobCollectionSlug == 'recommended') console.log(rawData)
-    } catch (error) {
-        console.log(`Error fetching jobs from collection ${jobCollectionSlug} :`, error);
+    let allJobPostings: JobPosting[] = []
+    const count = 50 // jobs per page
+    const repostedJobIds = new Set<string>()
+    const pagesToFetch = 3
+
+    for (let page = 0; page < pagesToFetch; page++) {
+        const start = page * count
+        try {
+            // Fetch the current page of jobs
+            rawData = await fetchLinkedInJobsList({ 
+                jobCollectionSlug,
+                start,
+                count
+            });
+            
+            if (jobCollectionSlug == 'recommended') console.log(rawData)
+
+            // If no job postings are found, break early
+            const hasJobPostings = rawData.some((entry: any) => entry['preDashNormalizedJobPostingUrn'])
+            if (!hasJobPostings) {
+                break
+            }
+
+            // Process the current page
+            const jobPostings: JobPosting[] = []
+
+            // each posting should have a jobPosting entity with additional info
+            rawData.forEach((entry: any) => {
+                const posting: string = entry['preDashNormalizedJobPostingUrn']
+                const reposted: boolean = entry.repostedJob
+                if (reposted) {
+                    repostedJobIds.add(getJobId(entry.entityUrn))
+                }
+                if (posting) {
+                    try {
+                        let applicantCount = '?'
+                        let listingDate
+                        let promoted = false
+                        entry.footerItems.forEach((item) => {
+                            if (item.type == "LISTED_DATE") {
+                                listingDate = item.timeAt
+                            }
+                            if (item.type == "APPLICANT_COUNT_TEXT") {
+                                applicantCount = item?.text?.text.split(" ")[0]
+                                if (applicantCount.toLowerCase() == 'be') {
+                                    applicantCount = '<25'
+                                }
+                            }
+                            if (item.type === "PROMOTED") {
+                                promoted = (item?.text?.text === 'Promoted')
+                            }
+                        })
+                        
+                        let companyLink = entry.logo?.actionTarget
+
+                        let salary: string = entry.tertiaryDescription?.text?.split("·")[0]
+                        if (salary && salary[0] !== '$') {
+                            salary = 'Not Sepcified'
+                        }
+
+                        const jobId = getJobId(entry.entityUrn)
+
+                        jobPostings.push({
+                            urn: entry.entityUrn,
+                            jobId: jobId,
+                            jobCollectionSlug: jobCollectionSlug,
+                            runId: runId.toString(),
+                            title: entry.title?.text,
+                            company: entry.primaryDescription?.text,
+                            companyLink: companyLink,
+                            salary: salary,
+                            location: entry.secondaryDescription?.text,
+                            remote: entry.secondaryDescription?.text.toLowerCase().includes("remote"),
+                            listingDate,
+                            reposted: repostedJobIds.has(jobId),
+                            applicantCount,
+                            promoted: promoted
+                        });
+                    } catch (error: any) {
+                        console.log("Error with this job posting:", jobCollectionSlug, entry)
+                        throw error
+                    }
+                }
+            });
+
+            // Add the current page's jobs to our collection
+            allJobPostings = [...allJobPostings, ...jobPostings]
+
+        } catch (error) {
+            console.log(`Error fetching jobs from collection ${jobCollectionSlug} at start=${start}:`, error);
+            break
+        }
     }
 
-    const jobPostings: JobPosting[] = []
-    const repostedJobIds = new Set<string>()
-
-    // each posting should have a jobPosting entity with additional info
-    rawData.forEach((entry: any) => {
-        const posting: string = entry['preDashNormalizedJobPostingUrn']
-        const reposted: boolean = entry.repostedJob
-        if (reposted) {
-            repostedJobIds.add(getJobId(entry.entityUrn))
-        }
-        if (posting) {
-            try {
-                let applicantCount = '?'
-                let listingDate
-                let promoted = false
-                entry.footerItems.forEach((item) => {
-                    if (item.type == "LISTED_DATE") {
-                        listingDate = item.timeAt
-                    }
-                    if (item.type == "APPLICANT_COUNT_TEXT") {
-                        applicantCount = item?.text?.text.split(" ")[0]
-                        if (applicantCount.toLowerCase() == 'be') {
-                            applicantCount = '<25'
-                        }
-                    }
-                    if (item.type === "PROMOTED") {
-                        promoted = (item?.text?.text === 'Promoted')
-                    }
-                })
-                
-                let companyLink = entry.logo?.actionTarget
-
-                let salary: string = entry.tertiaryDescription?.text?.split("·")[0]
-                if (salary && salary[0] !== '$') {
-                    salary = 'Not Sepcified'
-                }
-
-                const jobId = getJobId(entry.entityUrn)
-
-                jobPostings.push({
-                    urn: entry.entityUrn,
-                    jobId: jobId,
-                    jobCollectionSlug: jobCollectionSlug,
-                    runId: runId.toString(),
-                    title: entry.title?.text,
-                    company: entry.primaryDescription?.text,
-                    companyLink: companyLink,
-                    salary: salary,
-                    location: entry.secondaryDescription?.text,
-                    remote: entry.secondaryDescription?.text.toLowerCase().includes("remote"),
-                    listingDate,
-                    reposted: repostedJobIds.has(jobId),
-                    applicantCount,
-                    promoted: promoted
-                });
-            } catch (error: any) {
-                console.log("Error with this job posting:", jobCollectionSlug, entry)
-                throw error
-            }
-        }
-    });
-
-    return jobPostings;
+    console.log(`Fetched ${allJobPostings.length} jobs from ${jobCollectionSlug}`)
+    return allJobPostings;
 }
 
 interface JobDetailResponse {
