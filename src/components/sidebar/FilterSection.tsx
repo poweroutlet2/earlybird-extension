@@ -17,6 +17,8 @@ interface FilterSectionProps {
     locations: string[]
     excludePromoted: boolean
     showReposted: boolean
+    showEasyApply: boolean
+    showExternal: boolean
   }
   setFilterOptions: React.Dispatch<
     React.SetStateAction<{
@@ -24,6 +26,8 @@ interface FilterSectionProps {
       locations: string[]
       excludePromoted: boolean
       showReposted: boolean
+      showEasyApply: boolean
+      showExternal: boolean
     }>
   >
   includeKeywords: string[]
@@ -188,6 +192,20 @@ export const FilterSection: React.FC<FilterSectionProps> = ({
     }))
   }
 
+  const toggleShowEasyApply = (checked: boolean) => {
+    setFilterOptions((prev) => ({
+      ...prev,
+      showEasyApply: checked
+    }))
+  }
+
+  const toggleShowExternal = (checked: boolean) => {
+    setFilterOptions((prev) => ({
+      ...prev,
+      showExternal: checked
+    }))
+  }
+
   return (
     <div className={`p-6 pt-0 border-2 border-black space-y-4 relative ${isExpanded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}>
       <Button
@@ -275,6 +293,31 @@ export const FilterSection: React.FC<FilterSectionProps> = ({
         <Label htmlFor="show-reposted" className="text-base">
           Only show reposted jobs
         </Label>
+      </div>
+      <div>
+        <Label className="text-base mb-2 block">Apply Method:</Label>
+        <div className="space-y-2">
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="show-easy-apply"
+              checked={filterOptions.showEasyApply}
+              onCheckedChange={toggleShowEasyApply}
+            />
+            <Label htmlFor="show-easy-apply" className="text-base">
+              Easy Apply
+            </Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="show-external"
+              checked={filterOptions.showExternal}
+              onCheckedChange={toggleShowExternal}
+            />
+            <Label htmlFor="show-external" className="text-base">
+              External Application
+            </Label>
+          </div>
+        </div>
       </div>
       <div>
         <div className="flex justify-between items-center mb-2">

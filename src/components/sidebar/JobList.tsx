@@ -22,6 +22,8 @@ interface JobListProps {
     locations: string[]
     excludePromoted: boolean
     showReposted: boolean
+    showEasyApply: boolean
+    showExternal: boolean
   }
   error: string | null
   onFilterClick?: () => void
@@ -100,8 +102,12 @@ export const JobList: React.FC<JobListProps> = ({
 
       const matchesReposted = !filterOptions.showReposted || job.reposted;
 
+      const matchesApplyMethod = 
+        (job.easyApply && filterOptions.showEasyApply) || 
+        (!job.easyApply && filterOptions.showExternal);
+
       return matchesIncludeKeywords && !hasExcludedKeyword && matchesCompany && 
-        matchesLocation && isNotPromoted && matchesReposted;
+        matchesLocation && isNotPromoted && matchesReposted && matchesApplyMethod;
     });
 
     return sortJobs(filtered, sortBy, sortDirection);
@@ -140,7 +146,9 @@ export const JobList: React.FC<JobListProps> = ({
     filterOptions.companies.length > 0 || 
     filterOptions.locations.length > 0 ||
     filterOptions.excludePromoted ||
-    filterOptions.showReposted;
+    filterOptions.showReposted ||
+    !filterOptions.showEasyApply ||
+    !filterOptions.showExternal;
 
   return (
     <div className="earlybird-job-finder flex-1 overflow-y-hidden py-6 pl-6">

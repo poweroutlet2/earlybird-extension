@@ -335,7 +335,8 @@ async function getJobsFromCollection(jobCollectionSlug?: string, runId?: number)
                             listingDate,
                             reposted: repostedJobIds.has(jobId),
                             applicantCount,
-                            promoted: promoted
+                            promoted: promoted,
+                            easyApply: easyApply
                         });
                     } catch (error: any) {
                         console.log("Error with this job posting:", jobCollectionSlug, entry)

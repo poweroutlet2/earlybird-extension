@@ -20,6 +20,9 @@ export type JobPosting = {
     // db version 2:
     promoted?: boolean,
     companyLink?: string,
+
+    // db version 3:
+    easyApply?: boolean
 }
 
 export class DexieDB extends Dexie {
@@ -31,7 +34,7 @@ export class DexieDB extends Dexie {
         super('EarlyBird');
         // these are the indexed columns, must update version number whenever making changes here
         this.version(parseInt(process.env.PLASMO_PUBLIC_DB_VERSION)).stores({
-            jobPostings: '++id, runId, jobCollectionSlug, jobId, location, applicantCount, views, listingDate'
+            jobPostings: '++id, runId, jobCollectionSlug, jobId, location, applicantCount, views, listingDate, promoted, easyApply'
         });
     }
 }

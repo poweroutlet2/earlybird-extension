@@ -54,7 +54,9 @@ export default function App() {
     companies: [],
     locations: [],
     excludePromoted: false,
-    showReposted: false
+    showReposted: false,
+    showEasyApply: true,
+    showExternal: true
   })
   const [isFiltersExpanded, setIsFiltersExpanded] = useStorage("earlybird-isFiltersExpanded", false)
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false)

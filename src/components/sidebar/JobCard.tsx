@@ -94,8 +94,22 @@ export const JobCard: React.FC<JobCardProps> = React.memo(({ job, onHide }) => (
                   Promoted
                 </span>
               </TooltipTrigger>
-            <TooltipContent className="text-[1rem] ml-44">
+              <TooltipContent className="text-[1rem] ml-44">
                 <p>This job is marked Promoted on LinkedIn</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        }
+        {job.easyApply &&
+          <TooltipProvider>
+            <Tooltip delayDuration={350}>
+              <TooltipTrigger asChild>
+                <span className="inline-block bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+                  Easy Apply
+                </span>
+              </TooltipTrigger>
+              <TooltipContent className="text-[1rem] ml-44">
+                <p>You can EasyApply to this posting through LinkedIn</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
