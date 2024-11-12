@@ -154,7 +154,10 @@ const jobCollectionSlugs = [
     "climate-and-cleantech",
     "unlimited-vacation",
     "biotechnology",
-    "entertainment"
+    "entertainment",
+    "yc-funded",
+    "early-stage-startups",
+    "gen-ai"
 ]
 
 
@@ -255,7 +258,7 @@ async function getJobsFromCollection(jobCollectionSlug?: string, runId?: number)
     let allJobPostings: JobPosting[] = []
     const count = 50 // jobs per page
     const repostedJobIds = new Set<string>()
-    const pagesToFetch = 3
+    const pagesToFetch = 4
 
     for (let page = 0; page < pagesToFetch; page++) {
         const start = page * count
@@ -290,6 +293,7 @@ async function getJobsFromCollection(jobCollectionSlug?: string, runId?: number)
                         let applicantCount = '?'
                         let listingDate
                         let promoted = false
+                        let easyApply = false
                         entry.footerItems.forEach((item) => {
                             if (item.type == "LISTED_DATE") {
                                 listingDate = item.timeAt
@@ -301,7 +305,10 @@ async function getJobsFromCollection(jobCollectionSlug?: string, runId?: number)
                                 }
                             }
                             if (item.type === "PROMOTED") {
-                                promoted = (item?.text?.text === 'Promoted')
+                                promoted = (item?.text?.text === "Promoted")
+                            }
+                            if (item.type === "EASY_APPLY_TEXT") {
+                                easyApply = (item?.text?.text === "Easy Apply")
                             }
                         })
                         

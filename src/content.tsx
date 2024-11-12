@@ -99,7 +99,7 @@ export default function App() {
 
   return (
     <div
-      className={`fixed bg-bg border-l-8 border-black inset-y-0 right-0 w-1/3 drop-shadow-2xl flex flex-col transition-transform duration-200 ease-in-out p-1 ${
+      className={`fixed bg-bg border-l-8 border-black inset-y-0 right-0 w-[34%] drop-shadow-2xl flex flex-col transition-transform duration-200 ease-in-out p-1 ${
         isOpen ? "translate-x-0" : "translate-x-full"
       }`}>
       <Button
