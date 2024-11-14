@@ -32,6 +32,8 @@ interface FilterSectionProps {
   >
   includeKeywords: string[]
   setIncludeKeywords: React.Dispatch<React.SetStateAction<string[]>>
+  excludeKeywords: string[]
+  setExcludeKeywords: React.Dispatch<React.SetStateAction<string[]>>
   jobs: JobPosting[]
   onCollapse: () => void
   isExpanded: boolean
@@ -42,13 +44,14 @@ export const FilterSection: React.FC<FilterSectionProps> = ({
   setFilterOptions,
   includeKeywords,
   setIncludeKeywords,
+  excludeKeywords,
+  setExcludeKeywords,
   jobs,
   onCollapse,
   isExpanded
 }) => {
   const [includeKeyword, setIncludeKeyword] = useState("")
   const [excludeKeyword, setExcludeKeyword] = useState("")
-  const [excludeKeywords, setExcludeKeywords] = useStorage<string[]>("earlybird-excludeKeywords", [])
 
   const addIncludeKeyword = () => {
     if (includeKeyword.trim()) {

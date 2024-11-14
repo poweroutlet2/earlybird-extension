@@ -5,7 +5,7 @@ import { Card } from "~components/ui/card"
 
 export const RefreshWarningOverlay = ({ onRefresh, onClose }) => {
     return (
-        <Card className="absolute z-10 bg-red-200 p-2 w-80 mt-3 drop-shadow-xl">
+        <Card className="absolute z-10 bg-red-200 p-2 px-4 w-80 mt-3 drop-shadow-xl">
         <div className="absolute -top-2 left-1/3 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-b-4 border-l-transparent border-r-transparent border-b-black"></div>
             <button
                 onClick={onClose}

@@ -80,7 +80,7 @@ export const JobCard: React.FC<JobCardProps> = React.memo(({ job, onHide }) => (
           </div>
         )}
       </div>
-      <div className="flex flex-row gap-2 mb-2">
+      <div className="flex flex-row gap-2 mt-3">
         {job.remote && (
           <span className="inline-block bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded">
             Remote

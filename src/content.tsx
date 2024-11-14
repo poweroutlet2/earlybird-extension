@@ -193,6 +193,8 @@ export default function App() {
             setFilterOptions={setFilterOptions}
             includeKeywords={includeKeywords}
             setIncludeKeywords={setIncludeKeywords}
+            excludeKeywords={excludeKeywords}
+            setExcludeKeywords={setExcludeKeywords}
             jobs={jobs}
             onCollapse={() => setIsFiltersExpanded(false)}
             isExpanded={isFiltersExpanded}

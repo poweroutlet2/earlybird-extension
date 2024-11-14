@@ -96,7 +96,6 @@ const appRouter = t.router({
                         }
                     }
                 ])
-                console.log("Received feedback:", input.feedback)
                 return { success: true }
             } catch (error) {
                 console.error('Error submitting feedback:', error)
