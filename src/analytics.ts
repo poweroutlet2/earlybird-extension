@@ -1,11 +1,11 @@
 import { Storage } from "@plasmohq/storage"
 
 if (!process.env.PLASMO_PUBLIC_GTAG_ID) {
-    throw new Error("PLASMO_PUBLIC_GTAG_ID environment variable not set.")
+    console.warn("PLASMO_PUBLIC_GTAG_ID environment variable not set.")
 }
 
 if (!process.env.PLASMO_PUBLIC_GOOGLE_SECRET) {
-    throw new Error("PLASMO_PUBLIC_GOOGLE_SECRET environment variable not set.")
+    console.warn("PLASMO_PUBLIC_GOOGLE_SECRET environment variable not set.")
 }
 
 const GA_ENDPOINT = "https://www.google-analytics.com/mp/collect"
@@ -35,6 +35,7 @@ export const AnalyticsEvent = async (events: CollectEventPayload[]) => {
         clientId = 'development'
     } else {
         clientId = await storage.get("clientId")
+    }
 
     // Just incase the client ID was not set on install.
     if (!clientId) {

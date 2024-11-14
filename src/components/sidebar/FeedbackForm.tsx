@@ -2,8 +2,8 @@ import React, { useState } from "react"
 import { Button } from "~components/ui/button"
 import { Textarea } from "~components/ui/textarea"
 import { Input } from "~components/ui/input"
-import { MessageCircle, X } from "lucide-react"
-import { Card, CardContent } from "~components/ui/card"
+import { X } from "lucide-react"
+import { Card } from "~components/ui/card"
 
 interface FeedbackFormProps {
   isOpen: boolean

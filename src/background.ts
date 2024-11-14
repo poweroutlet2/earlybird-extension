@@ -70,8 +70,7 @@ const appRouter = t.router({
             }
         }),
     getSavedJobs: t.procedure
-        .input(z.string().optional())
-        .query(async ({ input }) => {
+        .query(async () => {
             return await getSavedJobs();
         }),
     submitFeedback: t.procedure
@@ -91,6 +90,7 @@ const appRouter = t.router({
                         params: {
                             feedback_type: input.feedback.type,
                             has_email: !!input.feedback.email,
+                            description: input.feedback.description,
                             operating_system: (await chrome.runtime.getPlatformInfo()).os,
                             locale: await chrome.i18n.getUILanguage()
                         }
