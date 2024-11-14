@@ -2,7 +2,7 @@
   "name": "early-bird",
   "displayName": "EarlyBird Jobs - Find and apply to newly posted LinkedIn jobs",
   "version": "0.9",
-  "description": "Sort LinkedIn job postings by posting date and applicant count.",
+  "description": "Sorting and Filtering options for the LinkedIn recommended jobs feed!",
   "author": "HP",
   "scripts": {
     "dev": "plasmo dev --verbose",

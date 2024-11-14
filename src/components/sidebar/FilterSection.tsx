@@ -207,7 +207,7 @@ export const FilterSection: React.FC<FilterSectionProps> = ({
   }
 
   return (
-    <div className={`p-6 pt-0 border-2 border-black space-y-4 relative ${isExpanded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}>
+  <div className={`p-6 pt-2 gap-1 border-2 border-black space-y-2 relative ${isExpanded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}>
       <Button
         onClick={onCollapse}
         className="absolute top-2 right-2 p-1"
@@ -274,13 +274,13 @@ export const FilterSection: React.FC<FilterSectionProps> = ({
           ))}
         </div>
       </div>
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-2 mt-2">
         <Checkbox
           id="exclude-promoted"
           checked={filterOptions.excludePromoted}
           onCheckedChange={toggleExcludePromoted}
         />
-        <Label htmlFor="exclude-promoted" className="text-base">
+        <Label htmlFor="exclude-promoted" className="text-sm mt-2">
           Exclude promoted jobs
         </Label>
       </div>
@@ -290,12 +290,12 @@ export const FilterSection: React.FC<FilterSectionProps> = ({
           checked={filterOptions.showReposted}
           onCheckedChange={toggleShowReposted}
         />
-        <Label htmlFor="show-reposted" className="text-base">
+        <Label htmlFor="show-reposted" className="text-sm">
           Only show reposted jobs
         </Label>
       </div>
       <div>
-        <Label className="text-base mb-2 block">Apply Method:</Label>
+        <Label className="text-base mb-1 block">Apply Method:</Label>
         <div className="space-y-2">
           <div className="flex items-center space-x-2">
             <Checkbox
@@ -303,7 +303,7 @@ export const FilterSection: React.FC<FilterSectionProps> = ({
               checked={filterOptions.showEasyApply}
               onCheckedChange={toggleShowEasyApply}
             />
-            <Label htmlFor="show-easy-apply" className="text-base">
+            <Label htmlFor="show-easy-apply" className="text-sm">
               Easy Apply
             </Label>
           </div>
@@ -313,7 +313,7 @@ export const FilterSection: React.FC<FilterSectionProps> = ({
               checked={filterOptions.showExternal}
               onCheckedChange={toggleShowExternal}
             />
-            <Label htmlFor="show-external" className="text-base">
+            <Label htmlFor="show-external" className="text-sm">
               External Application
             </Label>
           </div>
@@ -339,7 +339,7 @@ export const FilterSection: React.FC<FilterSectionProps> = ({
                 checked={filterOptions.companies.includes(company)}
                 onCheckedChange={() => toggleCompanyFilter(company)}
               />
-              <label htmlFor={`company-${company}`} className="text-base">
+              <label htmlFor={`company-${company}`} className="text-sm">
                 {company} ({count})
               </label>
             </div>

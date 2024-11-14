@@ -101,7 +101,7 @@ export default function App() {
 
   return (
     <div
-      className={`fixed bg-bg border-l-8 border-black inset-y-0 right-0 w-[34%] drop-shadow-2xl flex flex-col transition-transform duration-200 ease-in-out p-1 ${
+      className={`fixed bg-bg border-l-8 border-black inset-y-0 right-0 w-full max-w-[34%] min-w-[40rem] drop-shadow-2xl flex flex-col transition-transform duration-200 ease-in-out p-1 ${
         isOpen ? "translate-x-0" : "translate-x-full"
       }`}>
       <Button
@@ -167,7 +167,7 @@ export default function App() {
             )}
           </div>
         </div>
-        <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isFiltersExpanded ? 'max-h-[600px]' : 'max-h-0'}`}>
+        <div className={`overflow-auto earlybird-job-finder transition-all duration-300 ease-in-out ${isFiltersExpanded ? 'max-h-[600px]' : 'max-h-0'}`}>
           <FilterSection
             filterOptions={filterOptions}
             setFilterOptions={setFilterOptions}
