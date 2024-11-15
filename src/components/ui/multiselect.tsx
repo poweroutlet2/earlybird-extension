@@ -357,7 +357,7 @@ const MultiSelectorList = forwardRef<
         >
             {children}
             <CommandEmpty>
-                <span className="text-text dark:text-darkText">No results found</span>
+                <span className="text-text dark:text-darkText">Press enter or click add to apply.</span>
             </CommandEmpty>
         </CommandList>
     );

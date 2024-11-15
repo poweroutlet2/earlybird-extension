@@ -65,7 +65,7 @@ const appRouter = t.router({
 
                 // select keywordCounts from db to get sorted by count
                 const keywordCounts = await getSavedKeywordCounts()
-                console.log("keywordCounts", keywordCounts)
+                
                 return { jobs, keywordCounts };
             } catch (error) {
                 console.error('Error fetching jobs:', error);
@@ -260,7 +260,7 @@ async function getJobsFromCollection(jobCollectionSlug?: string, runId?: number)
     let allJobPostings: JobPosting[] = []
     const count = 50 // jobs per page
     const repostedJobIds = new Set<string>()
-    const pagesToFetch = 4
+    const pagesToFetch = 3
 
     for (let page = 0; page < pagesToFetch; page++) {
         const start = page * count
@@ -481,7 +481,6 @@ async function getJobsFromAllCollections(): Promise<JobPosting[]> {
             });
         });
 
-        console.log("Keyword counts:", keywordCounts);
         try {
             await db.transaction('rw', db.jobPostings, db.keywordCounts, async () => {
                 await db.jobPostings.clear();
