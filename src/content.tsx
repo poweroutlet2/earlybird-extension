@@ -8,7 +8,7 @@ import { chromeLink } from "trpc-chrome/link"
 
 import { useStorage } from "@plasmohq/storage/hook"
 
-import type { JobPosting } from "~db"
+import type { JobPosting, KeywordCount } from "~db"
 import { FilterSection } from "~components/sidebar/FilterSection"
 import { JobList } from "~components/sidebar/JobList"
 import { formatListingDate } from "~components/sidebar/utils"
@@ -38,6 +38,7 @@ export default function App() {
     v === undefined ? false : v
   )
   const [jobs, setJobs] = useState<JobPosting[]>([])
+  const [keywordCounts, setKeywordCounts] = useState<KeywordCount[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [includeKeywords, setIncludeKeywords] = useStorage<string[]>("earlybird-includeKeywords", [])
@@ -62,7 +63,9 @@ export default function App() {
 
   useEffect(() => {
     const fetchJobs = async () => {
-      setJobs((await chromeClient.getSavedJobs.query()) as JobPosting[])
+      const { jobs: fetchedJobs, keywordCounts: fetchedKeywordCounts } = await chromeClient.getSavedJobs.query()
+      setJobs(fetchedJobs as JobPosting[])
+      setKeywordCounts(fetchedKeywordCounts as KeywordCount[])
     }
     fetchJobs()
   }, [])
@@ -89,8 +92,10 @@ export default function App() {
     setIsLoading(true)
     setError(null)
     try {
-      const fetchedJobs = await chromeClient.refreshJobs.query()
+      const { jobs: fetchedJobs, keywordCounts: fetchedKeywordCounts } = await chromeClient.refreshJobs.query()
+      console.log("fetchedKeywordCounts", fetchedKeywordCounts)
       setJobs(fetchedJobs as JobPosting[])
+      setKeywordCounts(fetchedKeywordCounts as KeywordCount[])
       setLastRefreshTime(Date.now())
     } catch (err) {
       setError("Failed to fetch jobs. Please try again.")
@@ -198,6 +203,7 @@ export default function App() {
             jobs={jobs}
             onCollapse={() => setIsFiltersExpanded(false)}
             isExpanded={isFiltersExpanded}
+            keywordCounts={keywordCounts}
           />
         </div>
         <JobList

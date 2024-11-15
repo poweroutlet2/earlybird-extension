@@ -3,7 +3,7 @@ import { initTRPC } from '@trpc/server';
 import { createChromeHandler } from 'trpc-chrome/adapter';
 import { z } from 'zod';
 import { AnalyticsEvent } from "~analytics";
-import { db, type JobPosting } from "~db";
+import { db, type JobPosting, type KeywordCount } from "~db";
 
 /**
  * On install, generate a random client ID and store it in sync storage.
@@ -50,8 +50,7 @@ const t = initTRPC.create({
 
 const appRouter = t.router({
     refreshJobs: t.procedure
-        .input(z.string().optional())
-        .query(async ({ input }) => {
+        .query(async () => {
             try {
                 await AnalyticsEvent([
                     {
@@ -63,7 +62,11 @@ const appRouter = t.router({
                     }
                 ])
                 const jobs = await getJobsFromAllCollections();
-                return jobs;
+
+                // select keywordCounts from db to get sorted by count
+                const keywordCounts = await getSavedKeywordCounts()
+                console.log("keywordCounts", keywordCounts)
+                return { jobs, keywordCounts };
             } catch (error) {
                 console.error('Error fetching jobs:', error);
                 throw new Error('Failed to fetch jobs');
@@ -71,7 +74,7 @@ const appRouter = t.router({
         }),
     getSavedJobs: t.procedure
         .query(async () => {
-            return await getSavedJobs();
+            return { jobs: await getSavedJobs(), keywordCounts: await getSavedKeywordCounts() };
         }),
     submitFeedback: t.procedure
         .input(z.object({
@@ -337,6 +340,7 @@ async function getJobsFromCollection(jobCollectionSlug?: string, runId?: number)
                             promoted: promoted,
                             easyApply: easyApply
                         });
+
                     } catch (error: any) {
                         console.log("Error with this job posting:", jobCollectionSlug, entry)
                         throw error
@@ -454,14 +458,40 @@ async function getJobsFromAllCollections(): Promise<JobPosting[]> {
         await fetchJobDetailsBatch(uniqueJobs, url);
 
         console.log("Final applicant counts:", uniqueJobs.filter(job => job.applicantCount !== "?").length);
+        // Process keywords for each job
+        const keywordCounts: KeywordCount[] = [];
+        const aggregatedKeywords = new Map<string, number>();
 
+        // Process each job title and aggregate keyword counts
+        uniqueJobs.forEach(job => {
+            const jobKeywords = extractKeywords(job.title);
+            jobKeywords.forEach((count, keyword) => {
+                aggregatedKeywords.set(
+                    keyword, 
+                    (aggregatedKeywords.get(keyword) || 0) + count
+                );
+            });
+        });
+
+        // Convert the aggregated counts to KeywordCount objects
+        aggregatedKeywords.forEach((count, keyword) => {
+            keywordCounts.push({
+                keyword,
+                count
+            });
+        });
+
+        console.log("Keyword counts:", keywordCounts);
         try {
-            await db.transaction('rw', db.jobPostings, async () => {
+            await db.transaction('rw', db.jobPostings, db.keywordCounts, async () => {
                 await db.jobPostings.clear();
+                await db.keywordCounts.clear();
+                
                 await db.jobPostings.bulkAdd(uniqueJobs);
+                await db.keywordCounts.bulkAdd(keywordCounts);
             });
         } catch (error) {
-            console.error('Error saving jobs to IndexedDB:', error);
+            console.error('Error saving jobs and keywords to IndexedDB:', error);
         }
 
         return uniqueJobs;
@@ -501,5 +531,43 @@ async function getSavedJobs() {
         console.error('Error fetching saved jobs from IndexedDB', error);
         throw error
     }
+}
+
+async function getSavedKeywordCounts() {
+    try {
+        return db.keywordCounts.orderBy('count').reverse().toArray()
+    } catch (error) {
+        console.error('Error fetching saved keyword counts from IndexedDB', error);
+    }
+}
+
+function extractKeywords(title: string): Map<string, number> {
+    const keywords = new Map<string, number>();
+    
+    // Convert to lowercase and remove special characters
+    const cleanTitle = title.toLowerCase().replace(/[^\w\s]/g, '').trim();
+    
+    // Single words
+    const words = cleanTitle.split(/\s+/);
+    words.forEach(word => {
+        if (word.length >= 2) { // Only count words with 2 or more characters
+            keywords.set(word, (keywords.get(word) || 0) + 1);
+        }
+    });
+    
+    // // Phrases (2-3 words)
+    // for (let i = 0; i < words.length - 1; i++) {
+    //     // Two-word phrases
+    //     const phrase2 = words.slice(i, i + 2).join(' ');
+    //     keywords.set(phrase2, (keywords.get(phrase2) || 0) + 1);
+        
+    //     // Three-word phrases
+    //     if (i < words.length - 2) {
+    //         const phrase3 = words.slice(i, i + 3).join(' ');
+    //         keywords.set(phrase3, (keywords.get(phrase3) || 0) + 1);
+    //     }
+    // }
+    
+    return keywords;
 }
 

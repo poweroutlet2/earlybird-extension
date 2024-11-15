@@ -19,7 +19,7 @@ export const RefreshWarningOverlay = ({ onRefresh, onClose }) => {
             </div>
             <p className="text-xs mb-1">
                 Refreshing too often may cause issues with LinkedIn.
-                It is recommended waiting a bit between refreshes.
+                It is recommended refresh once every couple hours.
             </p>
             <div className="flex justify-end mb-2">
                 <Button size="sm" onClick={onRefresh} className="text-xs">
