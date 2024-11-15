@@ -93,7 +93,6 @@ export default function App() {
     setError(null)
     try {
       const { jobs: fetchedJobs, keywordCounts: fetchedKeywordCounts } = await chromeClient.refreshJobs.query()
-      console.log("fetchedKeywordCounts", fetchedKeywordCounts)
       setJobs(fetchedJobs as JobPosting[])
       setKeywordCounts(fetchedKeywordCounts as KeywordCount[])
       setLastRefreshTime(Date.now())
