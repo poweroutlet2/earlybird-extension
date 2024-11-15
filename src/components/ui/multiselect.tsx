@@ -28,6 +28,8 @@ interface MultiSelectorProps
     loop?: boolean;
     buttonProps?: MultiSelectorButtonProps;
     badgeProps?: MultiSelectorBadgeProps;
+    inputValue?: string;
+    onInputValueChange?: (value: string) => void;
 }
 
 interface MultiSelectContextProps {
@@ -69,14 +71,25 @@ const MultiSelector = ({
     badgeProps,
     children,
     dir,
+    inputValue: externalInputValue,
+    onInputValueChange,
     ...props
 }: MultiSelectorProps) => {
-    const [inputValue, setInputValue] = useState("");
+    const [internalInputValue, setInternalInputValue] = useState("");
     const [open, setOpen] = useState<boolean>(false);
     const [activeIndex, setActiveIndex] = useState<number>(-1);
     const inputRef = React.useRef<HTMLInputElement>(null);
     const [isValueSelected, setIsValueSelected] = React.useState(false);
     const [selectedValue, setSelectedValue] = React.useState("");
+
+    const inputValue = externalInputValue !== undefined ? externalInputValue : internalInputValue;
+    const setInputValue = (value: string) => {
+        if (onInputValueChange) {
+            onInputValueChange(value);
+        } else {
+            setInternalInputValue(value);
+        }
+    };
 
     const onValueChangeHandler = useCallback(
         (val: string) => {

@@ -2,7 +2,7 @@ import { Button } from "~components/ui/button"
 import { Checkbox } from "~components/ui/checkbox"
 import { Label } from "~components/ui/label"
 import { ScrollArea } from "~components/ui/scroll-area"
-import React, { useMemo, useCallback } from "react"
+import React, { useMemo, useCallback, useState } from "react"
 import { Switch } from "~components/ui/switch"
 import { ChevronUp } from "lucide-react"
 
@@ -55,6 +55,9 @@ export const FilterSection: React.FC<FilterSectionProps> = ({
   isExpanded,
   keywordCounts
 }) => {
+  const [includeInputValue, setIncludeInputValue] = useState("");
+  const [excludeInputValue, setExcludeInputValue] = useState("");
+
   const toggleCompanyFilter = (company: string) => {
     setFilterOptions((prev) => ({
       ...prev,
@@ -177,18 +180,14 @@ export const FilterSection: React.FC<FilterSectionProps> = ({
   const addExcludeKeyword = (inputValue: string) => {
     if (inputValue.trim() && !excludeKeywords.includes(inputValue.trim())) {
       setExcludeKeywords(prev => [...prev, inputValue.trim()]);
-      // Clear the input by accessing the MultiSelector context
-      const input = document.querySelector('.multiselect-input') as HTMLInputElement;
-      if (input) input.value = '';
+      // setExcludeInputValue("");
     }
   };
 
   const addIncludeKeyword = (inputValue: string) => {
     if (inputValue.trim() && !includeKeywords.includes(inputValue.trim())) {
       setIncludeKeywords(prev => [...prev, inputValue.trim()]);
-      // Clear the input
-      const input = document.querySelector('.multiselect-input-include') as HTMLInputElement;
-      if (input) input.value = '';
+      // setIncludeInputValue("");
     }
   };
 
@@ -206,6 +205,8 @@ export const FilterSection: React.FC<FilterSectionProps> = ({
           <MultiSelector
             values={includeKeywords}
             onValuesChange={setIncludeKeywords}
+            inputValue={includeInputValue}
+            onInputValueChange={setIncludeInputValue}
             loop={false}
             badgeProps={{
               className: "bg-green-100 text-green-800 hover:bg-green-200"
@@ -219,7 +220,7 @@ export const FilterSection: React.FC<FilterSectionProps> = ({
                   if (e.key === 'Enter' && e.currentTarget.value.trim()) {
                     e.preventDefault();
                     addIncludeKeyword(e.currentTarget.value);
-                    e.currentTarget.value = '';
+                    setIncludeInputValue("");
                   }
                 }}
               />
@@ -239,9 +240,8 @@ export const FilterSection: React.FC<FilterSectionProps> = ({
             size="sm"
             className="ml-auto bg-green-200 text-green-800 hover:bg-green-300"
             onClick={() => {
-              const input = document.querySelector("html > plasmo-csui").shadowRoot.querySelector(".multiselect-input-include") as HTMLInputElement;
-              if (input && input.value.trim()) {
-                addIncludeKeyword(input.value);
+              if (includeInputValue.trim()) {
+                addIncludeKeyword(includeInputValue);
               }
             }}
           >
@@ -255,24 +255,25 @@ export const FilterSection: React.FC<FilterSectionProps> = ({
           <MultiSelector
             values={excludeKeywords}
             onValuesChange={setExcludeKeywords}
+            inputValue={excludeInputValue}
+            onInputValueChange={setExcludeInputValue}
             loop={false}
             badgeProps={{
               className: "bg-red-100 text-red-800 hover:bg-red-200"
             }}
           >
             <MultiSelectorTrigger>
-              <div className="flex w-fit items-center gap-2">
-                <MultiSelectorInput
-                  className="multiselect-exclude-input flex-1"
-                  placeholder="Enter keyword to exclude from job title or company name"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && e.currentTarget.value.trim()) {
-                      e.preventDefault();
-                      addExcludeKeyword(e.currentTarget.value);
-                    }
-                  }}
-                />
-              </div>
+              <MultiSelectorInput
+                className="multiselect-exclude-input flex-1"
+                placeholder={excludeKeywords.length > 0 ? "" : "Enter keyword to exclude from job title or company name"}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                    e.preventDefault();
+                    addExcludeKeyword(e.currentTarget.value);
+                    setExcludeInputValue("");
+                  }
+                }}
+              />
             </MultiSelectorTrigger>
             <MultiSelectorContent>
               <MultiSelectorList>
@@ -289,11 +290,9 @@ export const FilterSection: React.FC<FilterSectionProps> = ({
             size="sm"
             className="bg-red-200 text-red-800 hover:bg-red-300"
             onClick={() => {
-              const input = document.querySelector("html > plasmo-csui").shadowRoot.querySelector(".multiselect-exclude-input") as HTMLInputElement;
-              if (input && input.value.trim()) {
-                addExcludeKeyword(input.value);
+              if (excludeInputValue.trim()) {
+                addExcludeKeyword(excludeInputValue);
               }
-              console.log(input);
             }}
           >
             Add
