@@ -2,7 +2,7 @@
 import { Command as CommandPrimitive } from "cmdk";
 import { X as RemoveIcon, Check } from "lucide-react";
 import React, {
-    KeyboardEvent,
+    type KeyboardEvent,
     createContext,
     forwardRef,
     useCallback,
@@ -12,7 +12,6 @@ import React, {
 import { Badge } from "./badge";
 import { Command, CommandEmpty, CommandItem, CommandList } from "./command";
 import { cn } from "~lib/utils";
-import { Button } from "./button";
 
 interface MultiSelectorButtonProps {
     className?: string;
@@ -42,7 +41,6 @@ interface MultiSelectContextProps {
     setActiveIndex: React.Dispatch<React.SetStateAction<number>>;
     ref: React.RefObject<HTMLInputElement>;
     handleSelect: (e: React.SyntheticEvent<HTMLInputElement>) => void;
-    buttonProps?: MultiSelectorButtonProps;
     badgeProps?: MultiSelectorBadgeProps;
 }
 
@@ -207,7 +205,6 @@ const MultiSelector = ({
                 setActiveIndex,
                 ref: inputRef,
                 handleSelect,
-                buttonProps,
                 badgeProps
             }}
         >
@@ -241,7 +238,7 @@ const MultiSelectorTrigger = forwardRef<
         <div
             ref={ref}
             className={cn(
-                "flex flex-wrap gap-1 border-2 p-2 border-border dark:border-darkBorder rounded-base bg-white dark:bg-darkBg",
+                "flex flex-wrap w-full gap-1 border-2 p-2 border-border dark:border-darkBorder rounded-base bg-white dark:bg-darkBg",
                 {
                     "focus-within:ring-2 focus-within:ring-black focus-within:ring-offset-2": activeIndex === -1,
                 },
@@ -249,7 +246,7 @@ const MultiSelectorTrigger = forwardRef<
             )}
             {...props}
         >
-            {value?.map((item, index) => (
+            {value.map((item, index) => (
                 <Badge
                     key={item}
                     className={cn(
@@ -282,10 +279,8 @@ MultiSelectorTrigger.displayName = "MultiSelectorTrigger";
 
 const MultiSelectorInput = forwardRef<
     React.ElementRef<typeof CommandPrimitive.Input>,
-    React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input> & {
-        onAdd?: () => void;
-    }
->(({ className, onAdd, ...props }, ref) => {
+    React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
+>(({ className, ...props }, ref) => {
     const {
         setOpen,
         inputValue,
@@ -294,11 +289,10 @@ const MultiSelectorInput = forwardRef<
         setActiveIndex,
         handleSelect,
         ref: inputRef,
-        buttonProps
     } = useMultiSelect();
 
     return (
-        <div className="flex flex-1 items-stretch gap-2">
+        <div className="flex flex-1 items-stretch">
             <CommandPrimitive.Input
                 {...props}
                 tabIndex={0}
@@ -315,20 +309,6 @@ const MultiSelectorInput = forwardRef<
                     activeIndex !== -1 && "caret-transparent",
                 )}
             />
-            {onAdd && (
-                <Button 
-                    onClick={(e) => {
-                        e.preventDefault();
-                        onAdd();
-                    }}
-                    className={cn(
-                        "bg-green-200 text-green-800 hover:bg-green-300",
-                        buttonProps?.className
-                    )}
-                >
-                    Add
-                </Button>
-            )}
         </div>
     );
 });

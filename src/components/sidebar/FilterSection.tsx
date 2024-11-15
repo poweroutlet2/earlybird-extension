@@ -1,13 +1,10 @@
-import { Badge } from "~components/ui/badge"
 import { Button } from "~components/ui/button"
 import { Checkbox } from "~components/ui/checkbox"
-import { Input } from "~components/ui/input"
 import { Label } from "~components/ui/label"
 import { ScrollArea } from "~components/ui/scroll-area"
-import React, { useMemo, useState, useCallback } from "react"
+import React, { useMemo, useCallback } from "react"
 import { Switch } from "~components/ui/switch"
 import { ChevronUp } from "lucide-react"
-import { useStorage } from "@plasmohq/storage/hook"
 
 import type { JobPosting } from "~db"
 import { MultiSelector, MultiSelectorTrigger, MultiSelectorInput, MultiSelectorContent, MultiSelectorList, MultiSelectorItem } from "~components/ui/multiselect"
@@ -19,7 +16,7 @@ interface KeywordCount {
 
 interface FilterSectionProps {
   filterOptions: {
-    companies: string[] 
+    companies: string[]
     locations: string[]
     excludePromoted: boolean
     showReposted: boolean
@@ -100,8 +97,8 @@ export const FilterSection: React.FC<FilterSectionProps> = ({
       } else {
         const matchesCompany = filterOptions.companies.length === 0 ||
           filterOptions.companies.includes(job.company);
-        const matchesThisLocation = 
-          (job.location === value) || 
+        const matchesThisLocation =
+          (job.location === value) ||
           (value === 'Remote' && job.location.toLowerCase().includes('remote'));
         return matchesThisLocation && matchesCompany;
       }
@@ -186,8 +183,17 @@ export const FilterSection: React.FC<FilterSectionProps> = ({
     }
   };
 
+  const addIncludeKeyword = (inputValue: string) => {
+    if (inputValue.trim() && !includeKeywords.includes(inputValue.trim())) {
+      setIncludeKeywords(prev => [...prev, inputValue.trim()]);
+      // Clear the input
+      const input = document.querySelector('.multiselect-input-include') as HTMLInputElement;
+      if (input) input.value = '';
+    }
+  };
+
   return (
-  <div className={`p-6 pt-2 gap-1 border-2 border-black space-y-2 relative ${isExpanded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}>
+    <div className={`p-6 pt-2 gap-1 border-2 border-black space-y-2 relative ${isExpanded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}>
       <Button
         onClick={onCollapse}
         className="absolute top-2 right-2 p-1"
@@ -196,92 +202,103 @@ export const FilterSection: React.FC<FilterSectionProps> = ({
       </Button>
       <div>
         <Label htmlFor="include-keywords" className="text-base">Include Keywords:</Label>
-        <MultiSelector 
-          values={includeKeywords} 
-          onValuesChange={setIncludeKeywords} 
-          loop={false}
-          buttonProps={{
-            className: "bg-green-200 text-green-800 hover:bg-green-300"
-          }}
-          badgeProps={{
-            className: "bg-green-100 text-green-800 hover:bg-green-200"
-          }}
-        >
-          <MultiSelectorTrigger>
-            <MultiSelectorInput 
-              className="multiselect-input-include"
-              placeholder="Enter keyword to include in job title or company name"
-              onAdd={() => {
-                const input = document.querySelector('.multiselect-input-include') as HTMLInputElement;
-                if (input && input.value.trim() && !includeKeywords.includes(input.value.trim())) {
-                  setIncludeKeywords(prev => [...prev, input.value.trim()]);
-                  input.value = '';
-                }
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && e.currentTarget.value.trim()) {
-                  e.preventDefault();
-                  const value = e.currentTarget.value.trim();
-                  if (!includeKeywords.includes(value)) {
-                    setIncludeKeywords(prev => [...prev, value]);
+        <div className="flex w-full items-center gap-2">
+          <MultiSelector
+            values={includeKeywords}
+            onValuesChange={setIncludeKeywords}
+            loop={false}
+            badgeProps={{
+              className: "bg-green-100 text-green-800 hover:bg-green-200"
+            }}
+          >
+            <MultiSelectorTrigger>
+              <MultiSelectorInput
+                className="multiselect-input-include flex-1"
+                placeholder={includeKeywords.length > 0 ? "" : "Enter keyword to include in job title or company name"}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                    e.preventDefault();
+                    addIncludeKeyword(e.currentTarget.value);
                     e.currentTarget.value = '';
                   }
-                }
-              }}
-            />
-          </MultiSelectorTrigger>
-          <MultiSelectorContent>
-            <MultiSelectorList>
-              {keywordCounts?.map((option) => (
-                <MultiSelectorItem key={option.keyword} value={option.keyword}>
-                  {`${option.keyword} (${option.count})`}
-                </MultiSelectorItem>
-              ))}
-            </MultiSelectorList>
-          </MultiSelectorContent>
-        </MultiSelector>
+                }}
+              />
+            </MultiSelectorTrigger>
+            <MultiSelectorContent>
+              <MultiSelectorList>
+                {keywordCounts?.map((option) => (
+                  <MultiSelectorItem key={option.keyword} value={option.keyword}>
+                    {`${option.keyword} (${option.count})`}
+                  </MultiSelectorItem>
+                ))}
+              </MultiSelectorList>
+            </MultiSelectorContent>
+          </MultiSelector>
+          <Button
+            type="button"
+            size="sm"
+            className="ml-auto bg-green-200 text-green-800 hover:bg-green-300"
+            onClick={() => {
+              const input = document.querySelector("html > plasmo-csui").shadowRoot.querySelector(".multiselect-input-include") as HTMLInputElement;
+              if (input && input.value.trim()) {
+                addIncludeKeyword(input.value);
+              }
+            }}
+          >
+            Add
+          </Button>
+        </div>
       </div>
       <div>
         <Label htmlFor="exclude-keywords" className="text-base">Exclude Keywords:</Label>
-        <MultiSelector 
-          values={excludeKeywords} 
-          onValuesChange={setExcludeKeywords} 
-          loop={false}
-          buttonProps={{
-            className: "bg-red-200 text-red-800 hover:bg-red-300"
-          }}
-          badgeProps={{
-            className: "bg-red-100 text-red-800 hover:bg-red-200"
-          }}
-        >
-          <MultiSelectorTrigger>
-            <MultiSelectorInput 
-              className="multiselect-input"
-              placeholder="Enter keyword to exclude from job title or company name"
-              onAdd={() => {
-                const input = document.querySelector('.multiselect-input') as HTMLInputElement;
-                if (input) {
-                  addExcludeKeyword(input.value);
-                }
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && e.currentTarget.value.trim()) {
-                  e.preventDefault();
-                  addExcludeKeyword(e.currentTarget.value);
-                }
-              }}
-            />
-          </MultiSelectorTrigger>
-          <MultiSelectorContent>
-            <MultiSelectorList>
-              {keywordCounts?.map((option) => (
-                <MultiSelectorItem key={option.keyword} value={option.keyword}>
-                  {`${option.keyword} (${option.count})`}
-                </MultiSelectorItem>
-              ))}
-            </MultiSelectorList>
-          </MultiSelectorContent>
-        </MultiSelector>
+        <div className="flex w-full items-center gap-2">
+          <MultiSelector
+            values={excludeKeywords}
+            onValuesChange={setExcludeKeywords}
+            loop={false}
+            badgeProps={{
+              className: "bg-red-100 text-red-800 hover:bg-red-200"
+            }}
+          >
+            <MultiSelectorTrigger>
+              <div className="flex w-fit items-center gap-2">
+                <MultiSelectorInput
+                  className="multiselect-exclude-input flex-1"
+                  placeholder="Enter keyword to exclude from job title or company name"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                      e.preventDefault();
+                      addExcludeKeyword(e.currentTarget.value);
+                    }
+                  }}
+                />
+              </div>
+            </MultiSelectorTrigger>
+            <MultiSelectorContent>
+              <MultiSelectorList>
+                {keywordCounts?.map((option) => (
+                  <MultiSelectorItem key={option.keyword} value={option.keyword}>
+                    {`${option.keyword} (${option.count})`}
+                  </MultiSelectorItem>
+                ))}
+              </MultiSelectorList>
+            </MultiSelectorContent>
+          </MultiSelector>
+          <Button
+            type="button"
+            size="sm"
+            className="bg-red-200 text-red-800 hover:bg-red-300"
+            onClick={() => {
+              const input = document.querySelector("html > plasmo-csui").shadowRoot.querySelector(".multiselect-exclude-input") as HTMLInputElement;
+              if (input && input.value.trim()) {
+                addExcludeKeyword(input.value);
+              }
+              console.log(input);
+            }}
+          >
+            Add
+          </Button>
+        </div>
       </div>
       <div className="flex items-center space-x-2 mt-2">
         <Checkbox
