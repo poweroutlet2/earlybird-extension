@@ -15,12 +15,14 @@ import { sortJobs } from "./utils"
 
 interface JobListProps {
   jobs: JobPosting[]
+  viewedJobs: Set<string>
   filterOptions: {
     excludeKeywords: string[]
     includeKeywords: string[]
     companies: string[]
     locations: string[]
     excludePromoted: boolean
+    excludeViewed: boolean
     showReposted: boolean
     showEasyApply: boolean
     showExternal: boolean
@@ -31,6 +33,7 @@ interface JobListProps {
 
 export const JobList: React.FC<JobListProps> = ({
   jobs,
+  viewedJobs,
   filterOptions,
   error,
   onFilterClick
@@ -78,6 +81,8 @@ export const JobList: React.FC<JobListProps> = ({
         return false
       }
 
+      const isNotViewed = !filterOptions.excludeViewed || !viewedJobs.has(job.jobId);
+
       const matchesIncludeKeywords = filterOptions.includeKeywords.length === 0 || 
         filterOptions.includeKeywords.some(keyword =>
           job.title?.toLowerCase().includes(keyword.toLowerCase()) ||
@@ -107,11 +112,11 @@ export const JobList: React.FC<JobListProps> = ({
         (!job.easyApply && filterOptions.showExternal);
 
       return matchesIncludeKeywords && !hasExcludedKeyword && matchesCompany && 
-        matchesLocation && isNotPromoted && matchesReposted && matchesApplyMethod;
+        matchesLocation && isNotPromoted && matchesReposted && matchesApplyMethod && isNotViewed;
     });
 
     return sortJobs(filtered, sortBy, sortDirection);
-  }, [jobs, filterOptions, hiddenJobs, sortBy, sortDirection]);
+  }, [jobs, filterOptions, hiddenJobs, sortBy, sortDirection, viewedJobs]);
 
   const getRowHeight = useCallback((index: number) => {
     return (rowHeights.current[index] || 200) + 16 // Add 16px for the bottom margin
@@ -134,7 +139,7 @@ export const JobList: React.FC<JobListProps> = ({
               setRowHeight(index, el.getBoundingClientRect().height)
             }
           }}>
-          <JobCard job={filteredAndSortedJobs[index]} onHide={handleHideJob} />
+          <JobCard job={filteredAndSortedJobs[index]} viewed={viewedJobs.has(filteredAndSortedJobs[index].jobId)} onHide={handleHideJob} />
         </div>
       </div>
     ),
@@ -146,6 +151,7 @@ export const JobList: React.FC<JobListProps> = ({
     filterOptions.companies.length > 0 || 
     filterOptions.locations.length > 0 ||
     filterOptions.excludePromoted ||
+    filterOptions.excludeViewed ||
     filterOptions.showReposted ||
     !filterOptions.showEasyApply ||
     !filterOptions.showExternal;

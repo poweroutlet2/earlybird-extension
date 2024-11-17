@@ -8,7 +8,7 @@ import { chromeLink } from "trpc-chrome/link"
 
 import { useStorage } from "@plasmohq/storage/hook"
 
-import type { JobPosting, KeywordCount } from "~db"
+import type { JobPosting, KeywordCount} from "~db"
 import { FilterSection } from "~components/sidebar/FilterSection"
 import { JobList } from "~components/sidebar/JobList"
 import { formatListingDate } from "~components/sidebar/utils"
@@ -33,6 +33,14 @@ export const getStyle = () => {
   return style
 }
 
+function getJobId(url: string) {
+  const match = url.match(/((?<=\/view\/)|(?<=currentJobId=))([^"]*?)(?=\/\?|\/|\?|\/|$|&)/gm)
+  if (!match || match.length == 0) {
+    return undefined
+  }
+  return match[0]
+}
+
 export default function App() {
   const [isOpen, setIsOpen] = useStorage("earlybird-isOpen", (v) =>
     v === undefined ? false : v
@@ -47,6 +55,7 @@ export default function App() {
     companies: [],
     locations: [],
     excludePromoted: false,
+    excludeViewed: false,
     showReposted: false,
     showEasyApply: true,
     showExternal: true
@@ -55,6 +64,7 @@ export default function App() {
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false)
   const [lastRefreshTime, setLastRefreshTime] = useStorage<number>("earlybird-lastRefreshTime", 0)
   const [showRefreshWarning, setShowRefreshWarning] = useState(false)
+  const [viewedJobs, setViewedJobs] = useState<Set<string>>(new Set())
 
   const toggleSidebar = useCallback(
     () => setIsOpen(!isOpen),
@@ -63,11 +73,17 @@ export default function App() {
 
   useEffect(() => {
     const fetchJobs = async () => {
-      const { jobs: fetchedJobs, keywordCounts: fetchedKeywordCounts } = await chromeClient.getSavedJobs.query()
+      const { jobs: fetchedJobs, keywordCounts: fetchedKeywordCounts, viewedJobs } = await chromeClient.getSavedJobs.query()
       setJobs(fetchedJobs as JobPosting[])
       setKeywordCounts(fetchedKeywordCounts as KeywordCount[])
+      setViewedJobs(new Set(viewedJobs))
     }
     fetchJobs()
+  
+    const currentJobId = getJobId(window.location.href)
+    if (currentJobId && !viewedJobs.has(currentJobId)) {
+      chromeClient.saveViewedJob.mutate({ jobId: currentJobId })
+    }
   }, [])
 
   const checkRefreshTime = () => {
@@ -207,6 +223,7 @@ export default function App() {
         </div>
         <JobList
           jobs={jobs}
+          viewedJobs={viewedJobs}
           filterOptions={{
             ...filterOptions,
             excludeKeywords,

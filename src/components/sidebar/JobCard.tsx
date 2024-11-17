@@ -10,11 +10,12 @@ import { formatListingDate } from "./utils"
 
 interface JobCardProps {
   job: JobPosting
+  viewed: boolean
   onHide: (jobId: string) => void
 }
 
-export const JobCard: React.FC<JobCardProps> = React.memo(({ job, onHide }) => (
-  <Card className="hover:shadow-md transition-shadow bg-[#f5f6fb] mb-4 relative">
+export const JobCard: React.FC<JobCardProps> = React.memo(({ job, viewed, onHide }) => (
+  <Card className={`hover:shadow-md transition-shadow bg-[#f5f6fb] mb-4 relative ${viewed ? "opacity-[.6]" : ""}`}>
     <TooltipProvider>
       <Tooltip delayDuration={250}>
         <TooltipTrigger asChild>
@@ -81,6 +82,20 @@ export const JobCard: React.FC<JobCardProps> = React.memo(({ job, onHide }) => (
         )}
       </div>
       <div className="flex flex-row gap-2 mt-3">
+        {viewed && (
+          <TooltipProvider>
+            <Tooltip delayDuration={350}>
+              <TooltipTrigger asChild>
+                <span className="inline-block bg-gray-300 text-gray-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+                  Viewed
+                </span>
+              </TooltipTrigger>
+              <TooltipContent className="text-[1rem] ml-44">
+                <p>You have viewed this job.</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
         {job.remote && (
           <span className="inline-block bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded">
             Remote
@@ -95,7 +110,7 @@ export const JobCard: React.FC<JobCardProps> = React.memo(({ job, onHide }) => (
                 </span>
               </TooltipTrigger>
               <TooltipContent className="text-[1rem] ml-44">
-                <p>This job is marked Promoted on LinkedIn</p>
+                <p>This job is marked Promoted on LinkedIn.</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -109,7 +124,7 @@ export const JobCard: React.FC<JobCardProps> = React.memo(({ job, onHide }) => (
                 </span>
               </TooltipTrigger>
               <TooltipContent className="text-[1rem] ml-44">
-                <p>You can EasyApply to this posting through LinkedIn</p>
+                <p>You can EasyApply to this posting through LinkedIn.</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>

@@ -19,6 +19,7 @@ interface FilterSectionProps {
     companies: string[]
     locations: string[]
     excludePromoted: boolean
+    excludeViewed: boolean
     showReposted: boolean
     showEasyApply: boolean
     showExternal: boolean
@@ -28,6 +29,7 @@ interface FilterSectionProps {
       companies: string[]
       locations: string[]
       excludePromoted: boolean
+      excludeViewed: boolean
       showReposted: boolean
       showEasyApply: boolean
       showExternal: boolean
@@ -191,6 +193,13 @@ export const FilterSection: React.FC<FilterSectionProps> = ({
     }
   };
 
+  const toggleExcludeViewed = (checked: boolean) => {
+    setFilterOptions((prev) => ({
+      ...prev,
+      excludeViewed: checked
+    }))
+  }
+
   return (
     <div className={`p-6 pt-2 gap-1 border-2 border-black space-y-2 relative ${isExpanded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}>
       <Button
@@ -301,11 +310,21 @@ export const FilterSection: React.FC<FilterSectionProps> = ({
       </div>
       <div className="flex items-center space-x-2 mt-2">
         <Checkbox
+          id="exclude-viewed"
+          checked={filterOptions.excludeViewed}
+          onCheckedChange={toggleExcludeViewed}
+        />
+        <Label htmlFor="exclude-viewed" className="text-sm mt-2">
+          Exclude viewed jobs
+        </Label>
+      </div>
+      <div className="flex items-center space-x-2 mt-2">
+        <Checkbox
           id="exclude-promoted"
           checked={filterOptions.excludePromoted}
           onCheckedChange={toggleExcludePromoted}
         />
-        <Label htmlFor="exclude-promoted" className="text-sm mt-2">
+        <Label htmlFor="exclude-promoted" className="text-sm">
           Exclude promoted jobs
         </Label>
       </div>

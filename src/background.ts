@@ -65,8 +65,9 @@ const appRouter = t.router({
 
                 // select keywordCounts from db to get sorted by count
                 const keywordCounts = await getSavedKeywordCounts()
+                const viewedJobs = await getSavedViewedJobs()
                 
-                return { jobs, keywordCounts };
+                return { jobs, keywordCounts, viewedJobs };
             } catch (error) {
                 console.error('Error fetching jobs:', error);
                 throw new Error('Failed to fetch jobs');
@@ -74,8 +75,13 @@ const appRouter = t.router({
         }),
     getSavedJobs: t.procedure
         .query(async () => {
-            return { jobs: await getSavedJobs(), keywordCounts: await getSavedKeywordCounts() };
+            return { jobs: await getSavedJobs(), keywordCounts: await getSavedKeywordCounts(), viewedJobs: await getSavedViewedJobs() };
         }),
+    saveViewedJob: t.procedure
+        .input(z.object({ jobId: z.string() }))
+        .mutation(async ({ input }) => {
+            await saveViewedJob(input.jobId)
+        }), 
     submitFeedback: t.procedure
         .input(z.object({
             feedback: z.object({
@@ -539,6 +545,24 @@ async function getSavedKeywordCounts() {
         console.error('Error fetching saved keyword counts from IndexedDB', error);
     }
 }
+
+async function getSavedViewedJobs() {
+    try {
+        const result = await db.viewedJobs.toArray()
+        return result.map(job => job.jobId)
+    } catch (error) {
+        console.error('Error fetching saved viewed jobs from IndexedDB', error);
+    }
+}
+
+async function saveViewedJob(jobId: string) {
+    try {
+        await db.viewedJobs.add({ jobId, viewedAt: new Date().toISOString() })
+    } catch (error) {
+        console.error('Error saving viewed job to IndexedDB', error);
+    }
+}
+
 
 function extractKeywords(title: string): Map<string, number> {
     const keywords = new Map<string, number>();
