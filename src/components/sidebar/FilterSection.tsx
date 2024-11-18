@@ -4,7 +4,7 @@ import { Label } from "~components/ui/label"
 import { ScrollArea } from "~components/ui/scroll-area"
 import React, { useMemo, useCallback, useState } from "react"
 import { Switch } from "~components/ui/switch"
-import { ChevronUp } from "lucide-react"
+import { ChevronUp, ChevronDown } from "lucide-react"
 
 import type { JobPosting } from "~db"
 import { MultiSelector, MultiSelectorTrigger, MultiSelectorInput, MultiSelectorContent, MultiSelectorList, MultiSelectorItem } from "~components/ui/multiselect"
@@ -59,6 +59,8 @@ export const FilterSection: React.FC<FilterSectionProps> = ({
 }) => {
   const [includeInputValue, setIncludeInputValue] = useState("");
   const [excludeInputValue, setExcludeInputValue] = useState("");
+  const [isCompaniesExpanded, setIsCompaniesExpanded] = useState(false);
+  const [isLocationsExpanded, setIsLocationsExpanded] = useState(false);
 
   const toggleCompanyFilter = (company: string) => {
     setFilterOptions((prev) => ({
@@ -364,8 +366,19 @@ export const FilterSection: React.FC<FilterSectionProps> = ({
         </div>
       </div>
       <div>
-        <div className="flex justify-between items-center mb-2">
-          <Label className="text-base">Companies:</Label>
+        <div
+          className="flex justify-between items-center mb-2 cursor-pointer"
+        >
+          <div className="flex items-center"
+            onClick={() => setIsCompaniesExpanded(!isCompaniesExpanded)}
+          >
+            <div className="flex items-center">
+              <Label className="text-base">Companies:</Label>
+              <div className="flex items-center justify-center w-8 h-8">
+                <ChevronDown className={`h-5 w-5 transition-transform ${isCompaniesExpanded ? '' : '-rotate-90'}`} />
+              </div>
+            </div>
+          </div>
           <div className="flex items-center space-x-2">
             <Switch
               id="toggle-all-companies"
@@ -375,24 +388,35 @@ export const FilterSection: React.FC<FilterSectionProps> = ({
             <Label htmlFor="toggle-all-companies" className="text-sm">Toggle All</Label>
           </div>
         </div>
-        <ScrollArea className="h-[200px]">
-          {companyOptions.map(({ company, count }) => (
-            <div key={company} className="flex items-center space-x-2">
-              <Checkbox
-                id={`company-${company}`}
-                checked={filterOptions.companies.includes(company)}
-                onCheckedChange={() => toggleCompanyFilter(company)}
-              />
-              <label htmlFor={`company-${company}`} className="text-sm">
-                {company} ({count})
-              </label>
-            </div>
-          ))}
-        </ScrollArea>
+        {isCompaniesExpanded && (
+          <ScrollArea className="h-[200px]">
+            {companyOptions.map(({ company, count }) => (
+              <div key={company} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`company-${company}`}
+                  checked={filterOptions.companies.includes(company)}
+                  onCheckedChange={() => toggleCompanyFilter(company)}
+                />
+                <label htmlFor={`company-${company}`} className="text-sm">
+                  {company} ({count})
+                </label>
+              </div>
+            ))}
+          </ScrollArea>
+        )}
       </div>
       <div>
-        <div className="flex justify-between items-center mb-2">
-          <Label className="text-base">Locations:</Label>
+        <div
+          className="flex justify-between items-center mb-2 cursor-pointer"
+        >
+          <div className="flex items-center" onClick={() => setIsLocationsExpanded(!isLocationsExpanded)}>
+            <div className="flex items-center">
+              <Label className="text-base">Locations:</Label>
+              <div className="flex items-center justify-center w-8 h-8">
+                <ChevronDown className={`h-5 w-5 transition-transform ${isLocationsExpanded ? '' : '-rotate-90'}`} />
+              </div>
+            </div>
+          </div>
           <div className="flex items-center space-x-2">
             <Switch
               id="toggle-all-locations"
@@ -402,20 +426,22 @@ export const FilterSection: React.FC<FilterSectionProps> = ({
             <Label htmlFor="toggle-all-locations" className="text-sm">Toggle All</Label>
           </div>
         </div>
-        <ScrollArea className="h-[200px]">
-          {locationOptions.map(({ location, count }) => (
-            <div key={location} className="flex items-center space-x-2">
-              <Checkbox
-                id={`location-${location}`}
-                checked={filterOptions.locations.includes(location)}
-                onCheckedChange={() => toggleLocationFilter(location)}
-              />
-              <label htmlFor={`location-${location}`} className="text-base">
-                {location} ({count})
-              </label>
-            </div>
-          ))}
-        </ScrollArea>
+        {isLocationsExpanded && (
+          <ScrollArea className="h-[200px]">
+            {locationOptions.map(({ location, count }) => (
+              <div key={location} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`location-${location}`}
+                  checked={filterOptions.locations.includes(location)}
+                  onCheckedChange={() => toggleLocationFilter(location)}
+                />
+                <label htmlFor={`location-${location}`} className="text-base">
+                  {location} ({count})
+                </label>
+              </div>
+            ))}
+          </ScrollArea>
+        )}
       </div>
     </div>
   )
