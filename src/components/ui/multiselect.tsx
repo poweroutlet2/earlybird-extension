@@ -251,7 +251,7 @@ const MultiSelectorTrigger = forwardRef<
         <div
             ref={ref}
             className={cn(
-                "flex flex-wrap w-full gap-1 border-2 p-2 border-border dark:border-darkBorder rounded-base bg-white dark:bg-darkBg",
+                "flex flex-wrap w-full gap-1 border-2 px-2 border-border dark:border-darkBorder rounded-base bg-white dark:bg-darkBg",
                 {
                     "focus-within:ring-2 focus-within:ring-black focus-within:ring-offset-2": activeIndex === -1,
                 },
@@ -317,7 +317,7 @@ const MultiSelectorInput = forwardRef<
                 onFocus={() => setOpen(true)}
                 onClick={() => setActiveIndex(-1)}
                 className={cn(
-                    "ml-2 bg-transparent outline-none placeholder:text-muted-foreground placeholder:text-base flex-1 h-full min-h-[2.5rem] py-2 text-base",
+                    "ml-2 bg-transparent outline-none placeholder:text-muted-foreground placeholder:text-base flex-1 h-full min-h-[2.5rem] text-base",
                     className,
                     activeIndex !== -1 && "caret-transparent",
                 )}

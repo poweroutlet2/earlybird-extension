@@ -89,9 +89,9 @@ export default function App() {
   const checkRefreshTime = () => {
     const currentTime = Date.now()
     const timeSinceLastRefresh = currentTime - lastRefreshTime
-    const tenMinutesInMs = 10 * 60 * 1000
+    const thirtyMinutesInMs = 30 * 60 * 1000
 
-    if (timeSinceLastRefresh < tenMinutesInMs) {
+    if (timeSinceLastRefresh < thirtyMinutesInMs) {
       setShowRefreshWarning(true)
       return false
     }
