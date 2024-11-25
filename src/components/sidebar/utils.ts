@@ -1,4 +1,4 @@
-import { JobPosting } from "~db"
+import type { JobPosting } from "~db"
 
 export const formatListingDate = (listingDate: string) => {
     const now = new Date()

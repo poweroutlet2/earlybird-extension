@@ -370,6 +370,7 @@ async function getJobsFromCollection(jobCollectionSlug?: string, runId?: number)
 interface JobDetailResponse {
     numApplicants?: string;
     description?: string;
+    applyUrl?: string;
     error?: string;
 }
 
@@ -413,12 +414,18 @@ async function fetchJobDetailsBatch(jobPostings: JobPosting[], url: string, batc
                 } else if (jobDetails?.error) {
                     // console.warn(`Error fetching details for job ${job.jobId}:`, jobDetails.error);
                 }
+                if (jobDetails?.applyUrl) {
+                    console.log(jobDetails.applyUrl)
+                    console.log((jobDetails.applyUrl.replace(/&amp;/g, '&')))
+                    console.log(decodeURIComponent(jobDetails.applyUrl.replace(/&amp;/g, '&')))
+                    job.applyUrl = decodeURIComponent(jobDetails.applyUrl.replace(/&amp;/g, '&'))
+                }
             }
 
             // Log progress
-            console.log(`Processed batch of ${batch.length} jobs. Success: ${Object.values(data).filter(d => d.numApplicants).length
-                }, Failed: ${Object.values(data).filter(d => d.error).length
-                }`);
+            // console.log(`Processed batch of ${batch.length} jobs. Success: ${Object.values(data).filter(d => d.numApplicants).length
+            //     }, Failed: ${Object.values(data).filter(d => d.error).length
+            //     }`);
 
         } catch (error) {
             if (attemptNum < retries) {
@@ -433,7 +440,6 @@ async function fetchJobDetailsBatch(jobPostings: JobPosting[], url: string, batc
     };
 
     try {
-        // Process all batches concurrently
         await Promise.all(batches.map(batch => processBatch(batch)));
     } catch (error) {
         console.error('Error fetching batch job details after all retries:', error);
@@ -449,10 +455,9 @@ async function getJobsFromAllCollections(): Promise<JobPosting[]> {
         const allJobPromises = jobCollectionSlugs.map(slug => getJobsFromCollection(slug, runId));
         const allJobsNested = await Promise.all(allJobPromises);
 
-        // Flatten the array of arrays into a single array
         const allJobs = allJobsNested.flat();
 
-        // Remove duplicate jobs based on jobId
+        // dedupe
         const uniqueJobs = Array.from(new Map(allJobs.map(job => [job.jobId, job])).values());
 
         const url = `${process.env.PLASMO_PUBLIC_BASE_API_URL}/api/linkedin-jobdetails-bulk`;
@@ -460,15 +465,15 @@ async function getJobsFromAllCollections(): Promise<JobPosting[]> {
         console.log("Total jobs:", uniqueJobs.length);
         console.log("Initial applicant counts:", uniqueJobs.filter(job => job.applicantCount !== "?").length);
 
-        // Fetch details for all jobs in batches
+        // fetch details for all jobs in batches
         await fetchJobDetailsBatch(uniqueJobs, url);
 
         console.log("Final applicant counts:", uniqueJobs.filter(job => job.applicantCount !== "?").length);
-        // Process keywords for each job
+        
         const keywordCounts: KeywordCount[] = [];
         const aggregatedKeywords = new Map<string, number>();
 
-        // Process each job title and aggregate keyword counts
+        // process each job title and aggregate keyword counts
         uniqueJobs.forEach(job => {
             const jobKeywords = extractKeywords(job.title);
             jobKeywords.forEach((count, keyword) => {
@@ -479,7 +484,7 @@ async function getJobsFromAllCollections(): Promise<JobPosting[]> {
             });
         });
 
-        // Convert the aggregated counts to KeywordCount objects
+        // convert the aggregated counts to KeywordCount objects
         aggregatedKeywords.forEach((count, keyword) => {
             keywordCounts.push({
                 keyword,

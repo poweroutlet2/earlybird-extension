@@ -14,9 +14,9 @@ import { JobList } from "~components/sidebar/JobList"
 import { formatListingDate } from "~components/sidebar/utils"
 import { FeedbackForm } from "~components/sidebar/FeedbackForm"
 
-import type { AppRouter } from "./background"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "~components/ui/tooltip"
 import { RefreshWarningOverlay } from "~components/sidebar/RefreshWarningPopup"
+import type { AppRouter } from "~background"
 
 const port = chrome.runtime.connect()
 export const chromeClient = createTRPCProxyClient<AppRouter>({

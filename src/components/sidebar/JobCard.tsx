@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader } from "~components/ui/card"
-import { Calendar, DollarSign, MapPin, Users, Minus } from "lucide-react"
+import { Calendar, DollarSign, MapPin, Users, ExternalLink } from "lucide-react";
 import React from "react"
 import { Button } from "~components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "~components/ui/tooltip"
@@ -33,11 +33,27 @@ export const JobCard: React.FC<JobCardProps> = React.memo(({ job, viewed, onHide
     </TooltipProvider>
     <CardHeader className="pb-2">
       <div className="flex items-start justify-between">
-        <h4 className="font-semibold text-lg text-primary hover:underline">
-          <a href={`https://www.linkedin.com/jobs/view/${job.jobId}`}>
-            {job.title}
-          </a>
-        </h4>
+        <div className="flex flex-row gap-2 items-center">
+          <h4 className="font-semibold text-lg text-primary hover:underline">
+            <a href={`https://www.linkedin.com/jobs/view/${job.jobId}`}>
+              {job.title}
+            </a>
+          </h4>
+          {job.applyUrl &&
+            <TooltipProvider>
+              <Tooltip delayDuration={250}>
+                <TooltipTrigger asChild>
+                  <a href={job.applyUrl}>
+                  <ExternalLink className="h-7 w-7 text-gray-500 hover:text-gray-900 hover:cursor-pointer hover:scale-110" />
+                  </a>
+                </TooltipTrigger>
+                <TooltipContent className="mr-10 text-sm">
+                  <p>Open Application</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          }
+        </div>
         <a href={job.companyLink} className="text-sm text-right font-medium text-muted-foreground bg-secondary px-2 py-1 rounded-full hover:underline">
           {job.company}
         </a>

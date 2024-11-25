@@ -23,6 +23,9 @@ export type JobPosting = {
 
     // db version 3:
     easyApply?: boolean
+
+    // db version 6:
+    applyUrl?: string
 }
 
 // db version 4:
