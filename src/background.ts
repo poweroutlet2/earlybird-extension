@@ -266,7 +266,7 @@ async function getJobsFromCollection(jobCollectionSlug?: string, runId?: number)
     let allJobPostings: JobPosting[] = []
     const count = 50 // jobs per page
     const repostedJobIds = new Set<string>()
-    const pagesToFetch = 3
+    const pagesToFetch = 2
 
     for (let page = 0; page < pagesToFetch; page++) {
         const start = page * count
