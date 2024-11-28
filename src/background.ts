@@ -419,9 +419,8 @@ async function fetchJobDetailsBatch(jobPostings: JobPosting[], url: string, batc
                     // console.warn(`Error fetching details for job ${job.jobId}:`, jobDetails.error);
                 }
                 if (jobDetails?.applyUrl) {
-                    jobDetails.applyUrl.replace(/&amp;/g, '&')
-                    job.applyUrl = decodeURIComponent(jobDetails.applyUrl)
-                    job.applyUrl.replace('&urlHash', '')
+                    const applyUrl = (jobDetails.applyUrl.replace(/&amp;/g, '&')).replace(' & urlHash', '')
+                    job.applyUrl = decodeURIComponent(applyUrl)
                 }
             }
 
