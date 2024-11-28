@@ -327,6 +327,10 @@ async function getJobsFromCollection(jobCollectionSlug?: string, runId?: number)
                             salary = 'Not Sepcified'
                         }
 
+                        const primaryDescription: string[] = entry.primaryDescription?.text.split("·")
+                        const company = primaryDescription.at(0)
+                        const location = primaryDescription.at(1)
+
                         const jobId = getJobId(entry.entityUrn)
 
                         jobPostings.push({
@@ -335,10 +339,10 @@ async function getJobsFromCollection(jobCollectionSlug?: string, runId?: number)
                             jobCollectionSlug: jobCollectionSlug,
                             runId: runId.toString(),
                             title: entry.title?.text,
-                            company: entry.primaryDescription?.text,
+                            company: company,
                             companyLink: companyLink,
                             salary: salary,
-                            location: entry.secondaryDescription?.text,
+                            location: location,
                             remote: entry.secondaryDescription?.text.toLowerCase().includes("remote"),
                             listingDate,
                             reposted: repostedJobIds.has(jobId),
@@ -415,10 +419,9 @@ async function fetchJobDetailsBatch(jobPostings: JobPosting[], url: string, batc
                     // console.warn(`Error fetching details for job ${job.jobId}:`, jobDetails.error);
                 }
                 if (jobDetails?.applyUrl) {
-                    console.log(jobDetails.applyUrl)
-                    console.log((jobDetails.applyUrl.replace(/&amp;/g, '&')))
-                    console.log(decodeURIComponent(jobDetails.applyUrl.replace(/&amp;/g, '&')))
-                    job.applyUrl = decodeURIComponent(jobDetails.applyUrl.replace(/&amp;/g, '&'))
+                    jobDetails.applyUrl.replace(/&amp;/g, '&')
+                    job.applyUrl = decodeURIComponent(jobDetails.applyUrl)
+                    job.applyUrl.replace('&urlHash', '')
                 }
             }
 

@@ -43,7 +43,7 @@ export const JobCard: React.FC<JobCardProps> = React.memo(({ job, viewed, onHide
             <TooltipProvider>
               <Tooltip delayDuration={250}>
                 <TooltipTrigger asChild>
-                  <a href={job.applyUrl}>
+                  <a href={job.applyUrl} target="_blank">
                   <ExternalLink className="h-7 w-7 text-gray-500 hover:text-gray-900 hover:cursor-pointer hover:scale-110" />
                   </a>
                 </TooltipTrigger>

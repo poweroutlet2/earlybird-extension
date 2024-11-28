@@ -106,7 +106,7 @@ export const FilterSection: React.FC<FilterSectionProps> = ({
           filterOptions.companies.includes(job.company);
         const matchesThisLocation =
           (job.location === value) ||
-          (value === 'Remote' && job.location.toLowerCase().includes('remote'));
+          (value === 'Remote' && job.location?.toLowerCase().includes('remote'));
         return matchesThisLocation && matchesCompany;
       }
     }).length;
@@ -127,7 +127,7 @@ export const FilterSection: React.FC<FilterSectionProps> = ({
   const locationOptions = useMemo(() => {
     const locations = new Map<string, number>();
     for (const job of filteredJobs) {
-      const locationKey = job.location.toLowerCase().includes('remote') ? 'Remote' : job.location;
+      const locationKey = job.location?.toLowerCase().includes('remote') ? 'Remote' : job.location;
       if (!locations.has(locationKey)) {
         locations.set(locationKey, getFilteredCount('location', locationKey));
       }
