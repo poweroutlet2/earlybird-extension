@@ -1,8 +1,8 @@
 {
   "name": "early-bird",
-  "displayName": "EarlyBird Jobs - Make job searching on LinkedIn as easy as possible",
-  "version": "0.13",
-  "description": "Sorting and Filtering options for the LinkedIn recommended jobs feed!",
+  "displayName": "EarlyBird Jobs - Simplify your job search",
+  "version": "0.14",
+  "description": "Sorting and Filtering tool for the LinkedIn recommended jobs feed!",
   "author": "HP",
   "scripts": {
     "dev": "plasmo dev --verbose",
