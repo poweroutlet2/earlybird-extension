@@ -66,7 +66,7 @@ const appRouter = t.router({
                 // select keywordCounts from db to get sorted by count
                 const keywordCounts = await getSavedKeywordCounts()
                 const viewedJobs = await getSavedViewedJobs()
-                
+
                 return { jobs, keywordCounts, viewedJobs };
             } catch (error) {
                 console.error('Error fetching jobs:', error);
@@ -81,7 +81,7 @@ const appRouter = t.router({
         .input(z.object({ jobId: z.string() }))
         .mutation(async ({ input }) => {
             await saveViewedJob(input.jobId)
-        }), 
+        }),
     submitFeedback: t.procedure
         .input(z.object({
             feedback: z.object({
@@ -248,7 +248,7 @@ async function fetchLinkedInJobsList({ count = 50, start = 0, jobCollectionSlug 
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        const data = await response.json(); 
+        const data = await response.json();
         return data.included;
     } catch (error) {
         console.error('Error fetching job list :', error);
@@ -272,12 +272,12 @@ async function getJobsFromCollection(jobCollectionSlug?: string, runId?: number)
         const start = page * count
         try {
             // Fetch the current page of jobs
-            rawData = await fetchLinkedInJobsList({ 
+            rawData = await fetchLinkedInJobsList({
                 jobCollectionSlug,
                 start,
                 count
             });
-            
+
             if (jobCollectionSlug == 'recommended') console.log(rawData)
 
             // If no job postings are found, break early
@@ -313,7 +313,7 @@ async function getJobsFromCollection(jobCollectionSlug?: string, runId?: number)
                                 }
                             }
                         })
-                        
+
                         entry.jobInsightsV2ResolutionResults.forEach((item) => {
                             if (item.insightViewModel?.text?.text == 'Easy Apply') {
                                 easyApply = true
@@ -471,7 +471,7 @@ async function getJobsFromAllCollections(): Promise<JobPosting[]> {
         await fetchJobDetailsBatch(uniqueJobs, url);
 
         console.log("Final applicant counts:", uniqueJobs.filter(job => job.applicantCount !== "?").length);
-        
+
         const keywordCounts: KeywordCount[] = [];
         const aggregatedKeywords = new Map<string, number>();
 
@@ -480,7 +480,7 @@ async function getJobsFromAllCollections(): Promise<JobPosting[]> {
             const jobKeywords = extractKeywords(job.title);
             jobKeywords.forEach((count, keyword) => {
                 aggregatedKeywords.set(
-                    keyword, 
+                    keyword,
                     (aggregatedKeywords.get(keyword) || 0) + count
                 );
             });
@@ -498,7 +498,7 @@ async function getJobsFromAllCollections(): Promise<JobPosting[]> {
             await db.transaction('rw', db.jobPostings, db.keywordCounts, async () => {
                 await db.jobPostings.clear();
                 await db.keywordCounts.clear();
-                
+
                 await db.jobPostings.bulkAdd(uniqueJobs);
                 await db.keywordCounts.bulkAdd(keywordCounts);
             });
@@ -549,7 +549,7 @@ async function getSavedKeywordCounts() {
     try {
         return db.keywordCounts.orderBy('count').reverse().toArray()
     } catch (error) {
-        console.error('Error fetching saved keyword counts from IndexedDB', error);
+        console.error('Error fetching saved keyword counts from IndexedDB', error.message);
     }
 }
 
@@ -558,25 +558,25 @@ async function getSavedViewedJobs() {
         const result = await db.viewedJobs.toArray()
         return result.map(job => job.jobId)
     } catch (error) {
-        console.error('Error fetching saved viewed jobs from IndexedDB', error);
+        console.error('Error fetching saved viewed jobs from IndexedDB: ', error.message);
     }
 }
 
 async function saveViewedJob(jobId: string) {
     try {
-        await db.viewedJobs.add({ jobId, viewedAt: new Date().toISOString() })
+        await db.viewedJobs.put({ jobId, viewedAt: new Date().toISOString() })
     } catch (error) {
-        console.error('Error saving viewed job to IndexedDB', error);
+        console.error('Error saving viewed job to IndexedDB: ', error.message);
     }
 }
 
 
 function extractKeywords(title: string): Map<string, number> {
     const keywords = new Map<string, number>();
-    
+
     // Convert to lowercase and remove special characters
     const cleanTitle = title.toLowerCase().replace(/[^\w\s]/g, '').trim();
-    
+
     // Single words
     const words = cleanTitle.split(/\s+/);
     words.forEach(word => {
@@ -584,20 +584,20 @@ function extractKeywords(title: string): Map<string, number> {
             keywords.set(word, (keywords.get(word) || 0) + 1);
         }
     });
-    
+
     // // Phrases (2-3 words)
     // for (let i = 0; i < words.length - 1; i++) {
     //     // Two-word phrases
     //     const phrase2 = words.slice(i, i + 2).join(' ');
     //     keywords.set(phrase2, (keywords.get(phrase2) || 0) + 1);
-        
+
     //     // Three-word phrases
     //     if (i < words.length - 2) {
     //         const phrase3 = words.slice(i, i + 3).join(' ');
     //         keywords.set(phrase3, (keywords.get(phrase3) || 0) + 1);
     //     }
     // }
-    
+
     return keywords;
 }
 
