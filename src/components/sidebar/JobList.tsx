@@ -2,9 +2,11 @@ import { Button } from "~components/ui/button"
 import { Label } from "~components/ui/label"
 import Select from "~components/ui/select"
 import { ArrowDown, ArrowUp, Filter } from "lucide-react"
-import React, { useCallback, useMemo, useRef, useState } from "react"
+import React, { useCallback, useMemo, useRef, useState, useEffect } from "react"
 import AutoSizer from "react-virtualized-auto-sizer"
 import { VariableSizeList as List } from "react-window"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "~components/ui/tooltip"
+import debounce from "lodash/debounce"
 
 import { useStorage } from "@plasmohq/storage/hook"
 
@@ -31,6 +33,10 @@ interface JobListProps {
   onFilterClick?: () => void
 }
 
+// Memoize row height calculations
+const ESTIMATED_ROW_HEIGHT = 216;
+const getEstimatedRowHeight = (index: number) => ESTIMATED_ROW_HEIGHT;
+
 export const JobList: React.FC<JobListProps> = ({
   jobs,
   viewedJobs,
@@ -39,22 +45,73 @@ export const JobList: React.FC<JobListProps> = ({
   onFilterClick
 }) => {
   const [sortBy, setSortBy] = useStorage<string>("earlybird-sortBy", (v) =>
-    v === undefined ? "listingDate" : v
+    v === undefined ? "earlyBirdScore" : v
   )
   const [sortDirection, setSortDirection] = useStorage<"asc" | "desc">(
     "earlybird-sort",
-    (v) => (v === undefined ? "asc" : v)
+    (v) => {
+      if (v === undefined) {
+        // Set initial direction based on sort type
+        return sortBy === "applicantCount" ? "asc" : "desc"
+      }
+      return v
+    }
   )
 
   const [hiddenJobs, setHiddenJobs] = useStorage<string[]>("earlybird-hiddenJobs", [])
+  const [scrollPosition, setScrollPosition] = useStorage<number>("earlybird-scrollPosition", 0)
   const listRef = useRef<List>(null)
   const rowHeights = useRef<{ [key: number]: number }>({})
+  const isInitialMount = useRef(true)
+
+  // Cleanup function to clear refs and caches
+  useEffect(() => {
+    return () => {
+      rowHeights.current = {}
+      isInitialMount.current = false
+    }
+  }, [])
+
+  // Restore scroll position when component mounts or jobs change
+  useEffect(() => {
+    if (!listRef.current || !jobs.length || !isInitialMount.current || scrollPosition <= 0) return;
+
+    const timeoutId = setTimeout(() => {
+      if (listRef.current) {
+        listRef.current.scrollTo(scrollPosition)
+        isInitialMount.current = false
+      }
+    }, 100)
+
+    return () => clearTimeout(timeoutId)
+  }, [jobs, scrollPosition])
+
+  // Reset scroll position when filters or sort changes
+  useEffect(() => {
+    if (!isInitialMount.current) {
+      setScrollPosition(0)
+      if (listRef.current) {
+        listRef.current.scrollTo(0)
+        listRef.current.resetAfterIndex(0)
+      }
+    }
+  }, [filterOptions, sortBy, sortDirection])
+
+  // Optimize scroll handler with throttling instead of debouncing
+  const handleScroll = useCallback(({ scrollOffset }: { scrollOffset: number }) => {
+    // Only update if scroll position changed significantly (more than 100px)
+    if (Math.abs(scrollOffset - scrollPosition) > 100) {
+      setScrollPosition(scrollOffset)
+    }
+  }, [scrollPosition, setScrollPosition])
 
   const sortByItems = useMemo(
     () => [
+      { label: "EarlyBird Score", value: "earlyBirdScore" },
       { label: "Listing Date", value: "listingDate" },
       { label: "Salary", value: "salary" },
-      { label: "Applicant Count", value: "applicantCount" }
+      { label: "Applicant Count", value: "applicantCount" },
+      { label: "Networking", value: "networking" }
     ],
     []
   )
@@ -65,7 +122,8 @@ export const JobList: React.FC<JobListProps> = ({
         setSortDirection(sortDirection === "desc" ? "asc" : "desc")
       } else {
         setSortBy(value)
-        setSortDirection("desc")
+        // Default to ascending for applicant count, descending for everything else
+        setSortDirection(value === "applicantCount" ? "asc" : "desc")
       }
     },
     [sortBy, sortDirection, setSortBy, setSortDirection]
@@ -75,76 +133,84 @@ export const JobList: React.FC<JobListProps> = ({
     setHiddenJobs((prev) => [...prev, jobId])
   }, [setHiddenJobs])
 
+  // Optimize filtering and sorting with better memoization
   const filteredAndSortedJobs = useMemo(() => {
-    let filtered = jobs.filter((job) => {
-      if (hiddenJobs.includes(job.jobId)) {
+    const hiddenJobsSet = new Set(hiddenJobs)
+    const includeKeywordsLower = filterOptions.includeKeywords.map(k => k.toLowerCase())
+    const excludeKeywordsLower = filterOptions.excludeKeywords.map(k => k.toLowerCase())
+    const companiesSet = new Set(filterOptions.companies)
+    const locationsSet = new Set(filterOptions.locations)
+
+    const filtered = jobs.filter((job) => {
+      if (hiddenJobsSet.has(job.jobId)) return false
+      if (filterOptions.excludeViewed && viewedJobs.has(job.jobId)) return false
+      if (filterOptions.excludePromoted && job.promoted) return false
+      if (!filterOptions.showReposted && job.reposted) return false
+      if (job.easyApply && !filterOptions.showEasyApply) return false
+      if (!job.easyApply && !filterOptions.showExternal) return false
+
+      const jobTextLower = `${job.title?.toLowerCase() || ''} ${job.company?.toLowerCase() || ''} ${job.description?.toLowerCase() || ''}`
+
+      if (includeKeywordsLower.length && !includeKeywordsLower.some(k => jobTextLower.includes(k))) {
         return false
       }
 
-      const isNotViewed = !filterOptions.excludeViewed || !viewedJobs.has(job.jobId);
+      if (excludeKeywordsLower.some(k => jobTextLower.includes(k))) {
+        return false
+      }
 
-      const matchesIncludeKeywords = filterOptions.includeKeywords.length === 0 || 
-        filterOptions.includeKeywords.some(keyword =>
-          job.title?.toLowerCase().includes(keyword.toLowerCase()) ||
-          job.company?.toLowerCase().includes(keyword.toLowerCase()) ||
-          job.description?.toLowerCase().includes(keyword.toLowerCase())
-        );
+      if (companiesSet.size && !companiesSet.has(job.company)) {
+        return false
+      }
 
-      const hasExcludedKeyword = filterOptions.excludeKeywords.some(keyword =>
-        job.title?.toLowerCase().includes(keyword.toLowerCase()) ||
-        job.company?.toLowerCase().includes(keyword.toLowerCase()) ||
-        job.description?.toLowerCase().includes(keyword.toLowerCase())
-      );
+      if (locationsSet.size && !locationsSet.has(job.location) && !(locationsSet.has("Remote") && job.remote)) {
+        return false
+      }
 
-      const matchesCompany = filterOptions.companies.length === 0 || 
-        filterOptions.companies.includes(job.company);
+      return true
+    })
 
-      const matchesLocation = filterOptions.locations.length === 0 ||
-        filterOptions.locations.includes(job.location) ||
-        (filterOptions.locations.includes("Remote") && job.remote);
-
-      const isNotPromoted = !filterOptions.excludePromoted || !job.promoted;
-
-      const matchesReposted = !filterOptions.showReposted || job.reposted;
-
-      const matchesApplyMethod = 
-        (job.easyApply && filterOptions.showEasyApply) || 
-        (!job.easyApply && filterOptions.showExternal);
-
-      return matchesIncludeKeywords && !hasExcludedKeyword && matchesCompany && 
-        matchesLocation && isNotPromoted && matchesReposted && matchesApplyMethod && isNotViewed;
-    });
-
-    return sortJobs(filtered, sortBy, sortDirection);
-  }, [jobs, filterOptions, hiddenJobs, sortBy, sortDirection, viewedJobs]);
+    return sortJobs(filtered, sortBy, sortDirection)
+  }, [jobs, hiddenJobs, filterOptions, sortBy, sortDirection, viewedJobs])
 
   const getRowHeight = useCallback((index: number) => {
-    return (rowHeights.current[index] || 200) + 16 // Add 16px for the bottom margin
+    return (rowHeights.current[index] || ESTIMATED_ROW_HEIGHT) + 8 // Add margin to height calculation
   }, [])
 
   const setRowHeight = useCallback((index: number, size: number) => {
-    listRef.current?.resetAfterIndex(0)
-    rowHeights.current = { ...rowHeights.current, [index]: size }
+    if (rowHeights.current[index] !== size) {
+      rowHeights.current[index] = size
+      listRef.current?.resetAfterIndex(index)
+    }
   }, [])
 
-  const renderJob = useCallback(
-    ({ index, style }) => (
-      <div style={{ ...style, paddingRight: "16px", paddingBottom: "16px" }}>
+  // Memoize the job renderer to prevent unnecessary re-renders
+  const renderJob = useMemo(() => {
+    return ({ index, style }) => (
+      <div style={{ 
+        ...style, 
+        paddingRight: "16px",
+        paddingBottom: "16px",
+        marginBottom: "8px"
+      }}>
         <div
           ref={(el) => {
-            if (
-              el &&
-              el.getBoundingClientRect().height !== rowHeights.current[index]
-            ) {
-              setRowHeight(index, el.getBoundingClientRect().height)
+            if (el) {
+              const height = el.getBoundingClientRect().height
+              if (height !== rowHeights.current[index]) {
+                setRowHeight(index, height)
+              }
             }
           }}>
-          <JobCard job={filteredAndSortedJobs[index]} viewed={viewedJobs.has(filteredAndSortedJobs[index].jobId)} onHide={handleHideJob} />
+          <JobCard 
+            job={filteredAndSortedJobs[index]} 
+            viewed={viewedJobs.has(filteredAndSortedJobs[index].jobId)} 
+            onHide={handleHideJob} 
+          />
         </div>
       </div>
-    ),
-    [filteredAndSortedJobs, setRowHeight, handleHideJob]
-  )
+    )
+  }, [filteredAndSortedJobs, viewedJobs, handleHideJob, setRowHeight])
 
   const isFiltered = filterOptions.includeKeywords.length > 0 || 
     filterOptions.excludeKeywords.length > 0 || 
@@ -187,7 +253,20 @@ export const JobList: React.FC<JobListProps> = ({
           <Label htmlFor="sort-by" className="text-sm font-medium">
             Sort by:
           </Label>
-          <Select items={sortByItems} onSelect={handleSort} value={sortBy} />
+          <TooltipProvider>
+            <Tooltip delayDuration={150}>
+              <TooltipTrigger asChild>
+                <div>
+                  <Select items={sortByItems} onSelect={handleSort} value={sortBy} />
+                </div>
+              </TooltipTrigger>
+              {sortBy === "earlyBirdScore" && (
+                <TooltipContent className="text-[1rem] ml-24 mt-10 max-w-[300px]">
+                  <p>The EarlyBird score takes into account the posting date, applicant count, and number of networking opportunities at the company.</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
           <Button
             size="icon"
             onClick={() =>
@@ -211,6 +290,8 @@ export const JobList: React.FC<JobListProps> = ({
                 itemCount={filteredAndSortedJobs.length}
                 itemSize={getRowHeight}
                 width={width}
+                onScroll={handleScroll}
+                initialScrollOffset={scrollPosition}
                 className="earlybird-job-finder scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
                 {renderJob}
               </List>

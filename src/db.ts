@@ -26,6 +26,11 @@ export type JobPosting = {
 
     // db version 6:
     applyUrl?: string
+
+    // db version 7:
+    companyAlumni?: number
+    schoolAlumni?: number
+    connections?: number
 }
 
 // db version 4:

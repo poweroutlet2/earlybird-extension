@@ -1,5 +1,55 @@
 import type { JobPosting } from "~db"
 
+const calculateEarlyBirdScore = (job: JobPosting): number => {
+    let score = 0
+
+    // 1. Date posted scoring (max 100 points)
+    const now = new Date().getTime()
+    const postedDate = new Date(parseInt(job.listingDate)).getTime()
+    const hoursSincePosted = (now - postedDate) / (1000 * 60 * 60)
+    
+    if (hoursSincePosted < 24) {
+        // Full 100 points for < 24 hours, scaling down to 50 points at 24 hours
+        score += 100 - (hoursSincePosted * (50/24))
+        // Extra boost for reposted jobs that are recent
+        if (job.reposted) {
+            score += 30
+        }
+    } else if (hoursSincePosted < 168) { // 7 days
+        // 50 points at 24 hours, scaling down to 0 at 7 days
+        score += 50 - ((hoursSincePosted - 24) * (50/144))
+    }
+
+    // 2. Connection count scoring (max 80 points)
+    const connectionCount = parseInt(job.connections?.toString() || "0")
+    score += Math.min(connectionCount * 4, 80) // 20 connections = max score
+
+    // 3. Alumni scoring (max 60 points)
+    // Company alumni worth more than school alumni
+    const companyAlumni = job.companyAlumni || 0
+    const schoolAlumni = job.schoolAlumni || 0
+    score += Math.min(companyAlumni * 3, 40) // 13+ company alumni = max score
+    score += Math.min(schoolAlumni * 2, 20) // 10+ school alumni = max score
+
+    // 4. Applicant count scoring (max 100 points)
+    if (job.applicantCount) {
+        const applicantCount = job.applicantCount === '<25' ? 24 : parseInt(job.applicantCount)
+        if (!isNaN(applicantCount)) {
+            if (applicantCount < 25) {
+                score += 100 // Maximum boost for very low applicants
+            } else if (applicantCount < 50) {
+                score += 75
+            } else if (applicantCount < 100) {
+                score += 50
+            } else if (applicantCount < 200) {
+                score += 25
+            }
+        }
+    }
+
+    return score
+}
+
 export const formatListingDate = (listingDate: string) => {
     const now = new Date()
     const postedDate = new Date(parseInt(listingDate))
@@ -37,6 +87,9 @@ export const sortJobs = (
     return [...jobs].sort((a, b) => {
         let comparison = 0
         switch (sortBy) {
+            case "earlyBirdScore":
+                comparison = calculateEarlyBirdScore(b) - calculateEarlyBirdScore(a)
+                break
             case "listingDate":
                 comparison =
                     new Date(b.listingDate).getTime() -
@@ -56,11 +109,11 @@ export const sortJobs = (
                 const bCount = parseCount(b.applicantCount)
 
                 // Sort '?' values to the end
-                if (aIsUnknown && !bIsUnknown) return 1
-                if (!aIsUnknown && bIsUnknown) return -1
+                if (aIsUnknown && !bIsUnknown) return direction === "asc" ? 1 : -1
+                if (!aIsUnknown && bIsUnknown) return direction === "asc" ? -1 : 1
 
-                // Regular comparison
-                comparison = aCount - bCount
+                // Regular comparison for applicant count
+                comparison = aCount - bCount // This is intentionally a-b for applicant count
                 break
             case "salary":
                 const getSalaryValue = (salary: string) => {
@@ -69,9 +122,20 @@ export const sortJobs = (
                 }
                 comparison = getSalaryValue(b.salary) - getSalaryValue(a.salary)
                 break
+            case "networking":
+                const getNetworkingScore = (job: JobPosting) => {
+                    return (job.schoolAlumni || 0) + (job.companyAlumni || 0) + (parseInt(job.connections?.toString() || "0") || 0)
+                }
+                comparison = getNetworkingScore(b) - getNetworkingScore(a)
+                break
             default:
                 return 0
         }
-        return direction === "asc" ? comparison : -comparison
+        // For applicant count, we want ascending to show lower numbers first
+        if (sortBy === "applicantCount") {
+            return direction === "asc" ? comparison : -comparison
+        }
+        // For all other sorts, we want descending to show higher numbers first
+        return direction === "desc" ? comparison : -comparison
     })
 }

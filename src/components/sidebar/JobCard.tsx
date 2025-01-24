@@ -145,6 +145,48 @@ export const JobCard: React.FC<JobCardProps> = React.memo(({ job, viewed, onHide
             </Tooltip>
           </TooltipProvider>
         }
+        {job.schoolAlumni > 0 &&
+          <TooltipProvider>
+            <Tooltip delayDuration={350}>
+              <TooltipTrigger asChild>
+                <span className="inline-block bg-purple-100 text-purple-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+                  {job.schoolAlumni} School Alumni
+                </span>
+              </TooltipTrigger>
+              <TooltipContent className="text-[1rem] ml-44">
+                <p>{job.schoolAlumni} alumni from your school work here. Try DM'ing these people for a referral!</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        }
+        {job.companyAlumni > 0 &&
+          <TooltipProvider>
+            <Tooltip delayDuration={350}>
+              <TooltipTrigger asChild>
+                <span className="inline-block bg-indigo-100 text-indigo-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+                  {job.companyAlumni} Company Alumni
+                </span>
+              </TooltipTrigger>
+              <TooltipContent className="text-[1rem] ml-44">
+                <p>{job.companyAlumni} people from your previous companies work here. Try DM'ing these people for a referral!</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        }
+        {job.connections > 0 &&
+          <TooltipProvider>
+            <Tooltip delayDuration={350}>
+              <TooltipTrigger asChild>
+                <span className="inline-block bg-pink-100 text-pink-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+                  {job.connections} Connections
+                </span>
+              </TooltipTrigger>
+              <TooltipContent className="text-[1rem] ml-44">
+                <p>You have {job.connections} connections at this company. Try DM'ing these people for a referral!</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        }
       </div>
     </CardContent>
   </Card>

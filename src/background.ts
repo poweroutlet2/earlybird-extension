@@ -288,7 +288,7 @@ async function getJobsFromCollection(jobCollectionSlug?: string, runId?: number)
 
             // Process the current page
             const jobPostings: JobPosting[] = []
-
+            console.log(rawData)
             // each posting should have a jobPosting entity with additional info
             rawData.forEach((entry: any) => {
                 const posting: string = entry['preDashNormalizedJobPostingUrn']
@@ -302,6 +302,10 @@ async function getJobsFromCollection(jobCollectionSlug?: string, runId?: number)
                         let listingDate
                         let promoted = false
                         let easyApply = false
+                        let companyAlumni = 0
+                        let schoolAlumni = 0
+                        let connections = 0
+
                         entry.footerItems.forEach((item) => {
                             if (item.type == "LISTED_DATE") {
                                 listingDate = item.timeAt
@@ -313,10 +317,23 @@ async function getJobsFromCollection(jobCollectionSlug?: string, runId?: number)
                                 }
                             }
                         })
-
+                        
                         entry.jobInsightsV2ResolutionResults.forEach((item) => {
-                            if (item.insightViewModel?.text?.text == 'Easy Apply') {
+                            const itemText = item.insightViewModel?.text?.text
+                            if (itemText == 'Easy Apply') {
                                 easyApply = true
+                            }
+
+                            if (itemText?.includes('company')) {
+                                companyAlumni = itemText.split(" ")[0]
+                            }
+
+                            if (itemText?.includes('school')) {
+                                schoolAlumni = itemText.split(" ")[0]
+                            }
+
+                            if (itemText?.includes('connections')) {
+                                connections = itemText
                             }
                         })
 
@@ -326,7 +343,7 @@ async function getJobsFromCollection(jobCollectionSlug?: string, runId?: number)
                         if (salary && salary[0] !== '$') {
                             salary = 'Not Sepcified'
                         }
-
+                        
                         const primaryDescription: string[] = entry.primaryDescription?.text.split("·")
                         const company = primaryDescription.at(0)
                         const location = primaryDescription.at(1)
@@ -348,7 +365,10 @@ async function getJobsFromCollection(jobCollectionSlug?: string, runId?: number)
                             reposted: repostedJobIds.has(jobId),
                             applicantCount,
                             promoted: promoted,
-                            easyApply: easyApply
+                            easyApply: easyApply,
+                            companyAlumni: companyAlumni,
+                            schoolAlumni: schoolAlumni,
+                            connections: connections
                         });
 
                     } catch (error: any) {
@@ -511,29 +531,6 @@ async function getJobsFromAllCollections(): Promise<JobPosting[]> {
         console.error('Error fetching jobs from all collections:', error);
         throw error;
     }
-}
-
-function cleanApplicantCount(inputString) {
-    // Remove any non-digit characters from the beginning of the string
-    let cleaned = inputString.replace(/^[^\d]+/, '');
-
-    // Extract the first number found
-    let match = cleaned.match(/\d+/);
-    if (match) {
-        let number = parseInt(match[0]);
-
-        // Check for specific cases
-        if (inputString.toLowerCase().includes('over') || inputString.toLowerCase().includes('more than')) {
-            return `${number}+`;
-        } else if (inputString.toLowerCase().includes('first') || inputString.toLowerCase().includes('be among')) {
-            return `<${number}`;
-        } else {
-            return number.toString();
-        }
-    }
-
-    // If no number is found, return the original string
-    return inputString;
 }
 
 async function getSavedJobs() {
