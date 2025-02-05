@@ -319,8 +319,31 @@ async function getJobsFromCollection(jobCollectionSlug?: string, runId?: number)
                                     applicantCount = '<25'
                                 }
                             }
+                            if (item.type == "EASY_APPLY_TEXT") {
+                                easyApply = true
+                            }
                         })
+                        
+                        currentField = 'processing relevanceInsight';
+                        if (entry.relevanceInsight) {
+                            // Only one of these are present at a time now?
+                            const text = entry.relevanceInsight.text?.text
 
+                            if (text?.includes('company')) {
+                                companyAlumni = text.split(" ")[0]
+                            }
+
+                            if (text?.includes('school')) {
+                                schoolAlumni = text.split(" ")[0]
+                            }
+
+                            if (text?.includes('connections')) {
+                                connections = text
+                            }
+                        }
+
+                        // Looks like jobInsightsV2ResolutionResults is deprecated
+                        // in place of relevanceInsight above ^
                         currentField = 'processing jobInsightsV2ResolutionResults';
                         entry.jobInsightsV2ResolutionResults.forEach((item) => {
                             const itemText = item.insightViewModel?.text?.text
