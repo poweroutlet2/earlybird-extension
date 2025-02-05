@@ -1,7 +1,7 @@
 {
   "name": "early-bird",
   "displayName": "EarlyBird Jobs - Simplify your job search",
-  "version": "1.1",
+  "version": "1.2",
   "description": "Sorting and Filtering tool for the LinkedIn recommended jobs feed!",
   "author": "HP",
   "scripts": {
