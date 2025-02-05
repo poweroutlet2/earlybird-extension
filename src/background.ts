@@ -2,7 +2,7 @@ import { Storage } from "@plasmohq/storage"
 import { initTRPC } from '@trpc/server';
 import { createChromeHandler } from 'trpc-chrome/adapter';
 import { z } from 'zod';
-import { AnalyticsEvent } from "~analytics";
+import { AnalyticsEvent, LogEvent } from "~analytics";
 import { db, type JobPosting, type KeywordCount } from "~db";
 
 /**
@@ -297,7 +297,9 @@ async function getJobsFromCollection(jobCollectionSlug?: string, runId?: number)
                     repostedJobIds.add(getJobId(entry.entityUrn))
                 }
                 if (posting) {
+                    let currentField = 'initial';
                     try {
+                        currentField = 'initializing job properties';
                         let applicantCount = '?'
                         let listingDate
                         let promoted = false
@@ -306,6 +308,7 @@ async function getJobsFromCollection(jobCollectionSlug?: string, runId?: number)
                         let schoolAlumni = 0
                         let connections = 0
 
+                        currentField = 'processing footerItems';
                         entry.footerItems.forEach((item) => {
                             if (item.type == "LISTED_DATE") {
                                 listingDate = item.timeAt
@@ -317,7 +320,8 @@ async function getJobsFromCollection(jobCollectionSlug?: string, runId?: number)
                                 }
                             }
                         })
-                        
+
+                        currentField = 'processing jobInsightsV2ResolutionResults';
                         entry.jobInsightsV2ResolutionResults.forEach((item) => {
                             const itemText = item.insightViewModel?.text?.text
                             if (itemText == 'Easy Apply') {
@@ -337,19 +341,32 @@ async function getJobsFromCollection(jobCollectionSlug?: string, runId?: number)
                             }
                         })
 
+                        currentField = 'processing logo for companyLink';
                         let companyLink = entry.logo?.actionTarget
 
+                        currentField = 'processing tertiaryDescription for salary';
                         let salary: string = entry.tertiaryDescription?.text?.split("·")[0]
                         if (salary && salary[0] !== '$') {
                             salary = 'Not Sepcified'
                         }
                         
+                        currentField = 'processing primaryDescription for company and location';
+                        let company = ''
+                        let location = '' 
                         const primaryDescription: string[] = entry.primaryDescription?.text.split("·")
-                        const company = primaryDescription.at(0)
-                        const location = primaryDescription.at(1)
+                        company = primaryDescription.at(0)
+                        if (primaryDescription.length > 1) {
+                            location = primaryDescription.at(1)
+                        } else {
+                            const secondaryDescription: string[] = entry.secondaryDescription?.text.split("·")
+                            location = secondaryDescription.at(0 )
+                        }
 
+
+                        currentField = 'extracting jobId';
                         const jobId = getJobId(entry.entityUrn)
 
+                        currentField = 'creating job posting object';
                         jobPostings.push({
                             urn: entry.entityUrn,
                             jobId: jobId,
@@ -369,11 +386,20 @@ async function getJobsFromCollection(jobCollectionSlug?: string, runId?: number)
                             companyAlumni: companyAlumni,
                             schoolAlumni: schoolAlumni,
                             connections: connections
-                        });
-
+                        })
                     } catch (error: any) {
-                        console.log("Error with this job posting:", jobCollectionSlug, entry)
-                        throw error
+                        const errorMessage = `Ingestion error: error processing job posting at field: ${currentField} in collection ${jobCollectionSlug}`
+                        console.error(errorMessage, error, entry);
+                        LogEvent({
+                            event_type: 'error',
+                            event_data: {
+                                error: error,
+                                errorMessage: errorMessage,
+                                entry: entry
+                            },
+                            user_type: 'earlybird-extension'
+                        })
+                        throw error;
                     }
                 }
             });
@@ -382,7 +408,7 @@ async function getJobsFromCollection(jobCollectionSlug?: string, runId?: number)
             allJobPostings = [...allJobPostings, ...jobPostings]
 
         } catch (error) {
-            console.log(`Error fetching jobs from collection ${jobCollectionSlug} at start=${start}:`, error);
+            console.log(`Error fetching jobs from collection '${jobCollectionSlug}' at start=${start}:`, error);
             break
         }
     }
